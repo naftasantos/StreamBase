@@ -33,3 +33,5 @@
 
 # Environment
 .vs/
+.vscode/
+build/

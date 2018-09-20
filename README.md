@@ -13,3 +13,5 @@ Two console applications using C++: 1. client 2. server; with the following feat
      * Assumption: Custom class means an instance of a class with custom values to its properties associated with a given client.
 
 1. The server should be able to store the custom objects created by the client for the custom class created in req-7
+
+Assumption: NamedPipes API refers to Microsoft Windows' NamedPipes API
