@@ -1,7 +1,11 @@
 #include <iostream>
 
+#include "server.h"
+
 int main(int argc, char** argv) {
-  std::cout << "Hello World" << std::endl;
+  NamedPipeServer server;
+
+  server.Start();
 
   return EXIT_SUCCESS;
 }
