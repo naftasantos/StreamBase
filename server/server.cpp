@@ -1,10 +1,11 @@
 #include "server.h"
 #include "windows_helper.h"
+#include "named_pipe_props.h"
 
 #include <iostream>
 
-#define PIPE_NAME "\\\\.\\pipe\\StreamBase"
 #define BUFFER_SIZE 1024 * 16
+#define PIPE_NAME "\\\\.\\pipe\\StreamBase"
 
 NamedPipeServer::NamedPipeServer() {
   this->_handle = NULL;
@@ -49,7 +50,7 @@ bool NamedPipeServer::Start() {
 
       if (ConnectNamedPipe(this->_handle, NULL) != false) {
         std::cout << "Client connected!" << std::endl;
-        
+
         while(ReadFile(this->_handle, buffer, sizeof(buffer) - 1, &bytesRead, NULL) != false) {
           buffer[bytesRead] = '\0';
 
@@ -57,6 +58,7 @@ bool NamedPipeServer::Start() {
         }
       }
 
+      std::cout << "disconnecting..." << std::endl;
       DisconnectNamedPipe(this->_handle);
     }
   }
