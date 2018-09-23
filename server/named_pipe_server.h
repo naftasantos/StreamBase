@@ -8,16 +8,21 @@
 
 #include "comm.h"
 
-typedef std::function<void(StreamComm::Message&, void*)> MessageCallback;
-typedef std::function<void(void*)> ConnectedCallback;
+class INamedPipeCallback {
+  public:
+    virtual ~INamedPipeCallback() {};
+};
+
+typedef std::function<void(StreamComm::Message&, INamedPipeCallback*)> MessageCallback;
+typedef std::function<void(INamedPipeCallback*)> ConnectedCallback;
 
 class NamedPipeServer{
   public:
     NamedPipeServer();
     virtual ~NamedPipeServer();
 
-    void AddMessageCallback(MessageCallback callback, void *context);
-    void AddConnectCallback(ConnectedCallback callback, void *context);
+    void AddMessageCallback(MessageCallback callback, INamedPipeCallback *context);
+    void AddConnectCallback(ConnectedCallback callback, INamedPipeCallback *context);
     bool Start();
   private:
     // disabling copy constructor
@@ -26,8 +31,8 @@ class NamedPipeServer{
     void DispatchOnMessage();
     void DispatchOnConnected();
     
-    std::vector<std::tuple<MessageCallback, void*>> message_callbacks;
-    std::vector<std::tuple<ConnectedCallback, void*>> connected_callbacks;
+    std::vector<std::tuple<MessageCallback, INamedPipeCallback*>> message_callbacks;
+    std::vector<std::tuple<ConnectedCallback, INamedPipeCallback*>> connected_callbacks;
 
     HANDLE _handle;
 };

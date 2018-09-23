@@ -63,20 +63,20 @@ bool NamedPipeServer::Start() {
   return ok;
 }
 
-void NamedPipeServer::AddConnectCallback(ConnectedCallback callback, void *context) {
-  std::tuple<ConnectedCallback, void*> tuple(callback, context);
+void NamedPipeServer::AddConnectCallback(ConnectedCallback callback, INamedPipeCallback *context) {
+  std::tuple<ConnectedCallback, INamedPipeCallback*> tuple(callback, context);
 
   this->connected_callbacks.push_back(tuple);
 }
 
-void NamedPipeServer::AddMessageCallback(MessageCallback callback, void *context) {
-  std::tuple<MessageCallback, void*> tuple(callback, context);
+void NamedPipeServer::AddMessageCallback(MessageCallback callback, INamedPipeCallback *context) {
+  std::tuple<MessageCallback, INamedPipeCallback*> tuple(callback, context);
 
   this->message_callbacks.push_back(tuple);
 }
 
 void NamedPipeServer::DispatchOnMessage() {
-  for (std::vector<std::tuple<MessageCallback, void*>>::iterator i = this->message_callbacks.begin();
+  for (std::vector<std::tuple<MessageCallback, INamedPipeCallback*>>::iterator i = this->message_callbacks.begin();
        i != this->message_callbacks.end();
        i++) {
     StreamComm::Message msg;
@@ -85,18 +85,18 @@ void NamedPipeServer::DispatchOnMessage() {
     memset(msg.data, 0, MAX_DATA_SIZE);
 
     MessageCallback callback = std::get<0>(*i);
-    void *context = std::get<1>(*i);
+    INamedPipeCallback *context = std::get<1>(*i);
 
     callback(msg, context);
   }
 }
 
 void NamedPipeServer::DispatchOnConnected() {
-  for (std::vector<std::tuple<ConnectedCallback, void*>>::iterator i = this->connected_callbacks.begin();
+  for (std::vector<std::tuple<ConnectedCallback, INamedPipeCallback*>>::iterator i = this->connected_callbacks.begin();
        i != this->connected_callbacks.end();
        i++) {
     ConnectedCallback callback = std::get<0>(*i);
-    void *context = std::get<1>(*i);
+    INamedPipeCallback *context = std::get<1>(*i);
 
     callback(context);
   }
