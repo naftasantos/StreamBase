@@ -36,7 +36,7 @@ bool NamedPipeServer::Start() {
 
   if (this->_handle == INVALID_HANDLE_VALUE) {
     std::cerr << "Unable to create Named Pipe" << std::endl;
-    std::cerr << "Error: " << WindowsHelper::GetLastErrorMessage() << std::endl;
+    std::cerr << "Error: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
     this->_handle = NULL;
     ok = false;
   } else {
@@ -74,8 +74,8 @@ void NamedPipeServer::DispatchOnMessage() {
   for (std::vector<std::tuple<CallbackFunction, void*>>::iterator i = this->callbacks.begin();
        i != this->callbacks.end();
        i++) {
-    Message msg;
-    msg.header.message_command = kCommandGreeting;
+    StreamComm::Message msg;
+    msg.header.message_command = StreamComm::kCommandGreeting;
     msg.header.data_size = 0;
     memset(msg.data, 0, MAX_DATA_SIZE);
 

@@ -8,7 +8,7 @@
 
 #include "comm.h"
 
-typedef std::function<void(Message&, void*)> CallbackFunction;
+typedef std::function<void(StreamComm::Message&, void*)> CallbackFunction;
 
 class NamedPipeServer{
   public:

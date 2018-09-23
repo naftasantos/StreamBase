@@ -1,6 +1,6 @@
 #include "windows_helper.h"
 
-std::string WindowsHelper::GetLastErrorMessage() {
+std::string Helper::WindowsHelper::GetLastErrorMessage() {
   std::string message;
   DWORD error = GetLastError();
   LPSTR messageBuffer = NULL;

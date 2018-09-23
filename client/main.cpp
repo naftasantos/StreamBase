@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
                       NULL);
 
   if (handle == INVALID_HANDLE_VALUE) {
-    std::cerr << "Error connecting to pipe: " << WindowsHelper::GetLastErrorMessage() << std::endl;
+    std::cerr << "Error connecting to pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
   } else {
     std::cout << "Connected!" << std::endl;
     WriteFile(handle,

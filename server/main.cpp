@@ -3,7 +3,7 @@
 #include "server.h"
 #include "comm.h"
 
-void on_message(Message& message, void* context) {
+void on_message(StreamComm::Message& message, void* context) {
   std::cout << "Received callback" << std::endl;
 }
 
