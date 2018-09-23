@@ -12,10 +12,14 @@ set(SERVER_INCLUDE server/server.h
 set(CLIENT_SOURCE client/main.cpp
                   client/screens/screen_factory.cpp
                   client/screens/connect_screen.cpp
+                  client/screens/home_screen.cpp
+                  client/screens/store_data_screen.cpp
                   client/screens/screen_data.cpp)
 
 set(CLIENT_INCLUDE client/screens/screen_factory.h
                    client/screens/connect_screen.h
+                   client/screens/home_screen.h
+                   client/screens/store_data_screen.h
                    client/screens/screen_interface.h
                    client/screens/connect_screen.h)
 

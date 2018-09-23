@@ -53,4 +53,8 @@ void Server::OnConnected() {
   } else {
     std::cerr << "Error sending greeting" << std::endl;
   }
+
+  while(this->named_pipe.Read(&message)) {
+    std::cout << "Message received" << std::endl;
+  }
 }

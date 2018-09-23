@@ -38,6 +38,7 @@ Screen ConnectScreen::Show() {
       switch(message.header.message_command) {
         case StreamComm::kCommandGreeting:
           std::cout << "Greeting command received" << std::endl;
+          next_screen = kScreenHome;
           break;
         default:
           std::cerr << "Invalid command received" << std::endl;
