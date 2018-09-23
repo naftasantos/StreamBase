@@ -1,54 +1,23 @@
-#include <windows.h>
 #include <iostream>
 
-#include "windows_helper.h"
-#include "comm.h"
-#include "named_pipe_io.h"
+#include "screens/screen_data.h"
+#include "screens/screen_interface.h"
+#include "screens/screen_factory.h"
 
 int main(int argc, char** argv) {
-  HANDLE handle;
-  // DWORD bytesWritten;
-  StreamComm::Message message;
+  Screen current_screen = kScreenConnect;
 
-  // std::string message("Sending message over pipe\n");
-
-  std::cout << "Connecting to Pipe" << std::endl;
-  handle = CreateFile(TEXT(PIPE_NAME),
-                      GENERIC_READ | GENERIC_WRITE,
-                      0,
-                      NULL,
-                      OPEN_EXISTING,
-                      0,
-                      NULL);
-
-  if (handle == INVALID_HANDLE_VALUE) {
-    std::cerr << "Error connecting to pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-  } else {
-    std::cout << "Connected!" << std::endl;
-
-    if (StreamComm::NamedPipeIO::Read(handle, &message)) {
-      std::cout << "Data received, reading it..." << std::endl;
-
-      switch(message.header.message_command) {
-        case StreamComm::kCommandGreeting:
-          std::cout << "Greeting command received" << std::endl;
-          break;
-        default:
-          std::cerr << "Invalid command received" << std::endl;
-          break;
-      }
+  do {
+    IScreen* screen = ScreenFactory::CreateScreen(current_screen);
+    
+    if (screen != nullptr) {
+      current_screen = screen->Show();
+      delete screen;
     } else {
-      std::cerr << "Error reading from pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      current_screen = kScreenNone;
     }
-
-    // WriteFile(handle,
-    //           message.c_str(),
-    //           (DWORD)(message.length() + 1) * sizeof(char),
-    //           &bytesWritten,
-    //           NULL);
-    // std::cout << "Info sent. Disconnecting..." << std::endl;
-    CloseHandle(handle);
-  }
-
+  } while(current_screen != kScreenNone);
+  
+  ScreenData::Finish();
   return EXIT_SUCCESS;
 }
