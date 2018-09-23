@@ -3,7 +3,7 @@
 #include "named_pipe_server.h"
 #include "comm.h"
 
-class Server : INamedPipeCallback {
+class Server : public INamedPipeCallback {
   public:
     Server();
     virtual ~Server();

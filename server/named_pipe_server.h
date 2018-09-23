@@ -24,6 +24,8 @@ class NamedPipeServer{
     void AddMessageCallback(MessageCallback callback, INamedPipeCallback *context);
     void AddConnectCallback(ConnectedCallback callback, INamedPipeCallback *context);
     bool Start();
+    bool Write(StreamComm::Message &message);
+    bool Read(StreamComm::Message* message);
   private:
     // disabling copy constructor
     NamedPipeServer(const NamedPipeServer &other) {}

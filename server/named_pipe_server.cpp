@@ -22,7 +22,7 @@ void NamedPipeServer::CloseNamedPipe() {
 
 bool NamedPipeServer::Start() {
   bool ok = false;
-  char buffer[1024];
+  // char buffer[1024];
   DWORD bytesRead = 0;
 
   this->_handle = CreateNamedPipe(TEXT(PIPE_NAME),
@@ -47,12 +47,13 @@ bool NamedPipeServer::Start() {
       if (ConnectNamedPipe(this->_handle, NULL) != false) {
         this->DispatchOnConnected();
 
-        while(ReadFile(this->_handle, buffer, sizeof(buffer) - 1, &bytesRead, NULL) != false) {
-          buffer[bytesRead] = '\0';
+        // std::cout << "Waiting for data" << std::endl;
+        // while(ReadFile(this->_handle, buffer, sizeof(buffer) - 1, &bytesRead, NULL) != false) {
+        //   buffer[bytesRead] = '\0';
 
-          std::cout << buffer << std::endl;
-          this->DispatchOnMessage();
-        }
+        //   std::cout << buffer << std::endl;
+        //   this->DispatchOnMessage();
+        // }
       }
 
       std::cout << "disconnecting..." << std::endl;
@@ -100,4 +101,34 @@ void NamedPipeServer::DispatchOnConnected() {
 
     callback(context);
   }
+}
+
+bool NamedPipeServer::Write(StreamComm::Message &message) {
+  bool status = true;
+
+  if(this->_handle != INVALID_HANDLE_VALUE) {
+    status = WriteFile(this->_handle,
+                       &message,
+                       sizeof(StreamComm::Message),
+                       NULL,
+                       NULL);
+  } else {
+    status = false;
+  }
+
+  return status;
+}
+
+bool NamedPipeServer::Read(StreamComm::Message *message) {
+  bool status = true;
+
+  if (this->_handle != INVALID_HANDLE_VALUE) {
+    status = ReadFile(this->_handle,
+                      message,
+                      sizeof(StreamComm::Message),
+                      NULL,
+                      NULL);
+  }
+
+  return status;
 }
