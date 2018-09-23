@@ -1,5 +1,6 @@
 #include "named_pipe_server.h"
 #include "windows_helper.h"
+#include "named_pipe_io.h"
 
 #include <iostream>
 
@@ -104,31 +105,9 @@ void NamedPipeServer::DispatchOnConnected() {
 }
 
 bool NamedPipeServer::Write(StreamComm::Message &message) {
-  bool status = true;
-
-  if(this->_handle != INVALID_HANDLE_VALUE) {
-    status = WriteFile(this->_handle,
-                       &message,
-                       sizeof(StreamComm::Message),
-                       NULL,
-                       NULL);
-  } else {
-    status = false;
-  }
-
-  return status;
+  return StreamComm::NamedPipeIO::Write(this->_handle, message);
 }
 
 bool NamedPipeServer::Read(StreamComm::Message *message) {
-  bool status = true;
-
-  if (this->_handle != INVALID_HANDLE_VALUE) {
-    status = ReadFile(this->_handle,
-                      message,
-                      sizeof(StreamComm::Message),
-                      NULL,
-                      NULL);
-  }
-
-  return status;
+  return StreamComm::NamedPipeIO::Read(this->_handle, message);
 }

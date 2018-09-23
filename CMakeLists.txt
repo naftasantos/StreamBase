@@ -11,8 +11,11 @@ set(SERVER_INCLUDE server/server.h
 
 set(CLIENT_SOURCE client/main.cpp)
 
-set(SHARED_SOURCE shared/windows_helper.cpp)
-set(SHARED_INCLUDE shared/windows_helper.h)
+set(SHARED_SOURCE shared/windows_helper.cpp
+                  shared/named_pipe_io.cpp)
+set(SHARED_INCLUDE shared/windows_helper.h
+                   shared/named_pipe_io.h
+                   shared/comm.h)
 
 add_library(Shared STATIC ${SHARED_SOURCE} ${SHARED_INCLUDE})
 add_executable(Client ${CLIENT_SOURCE})

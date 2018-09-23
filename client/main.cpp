@@ -3,6 +3,7 @@
 
 #include "windows_helper.h"
 #include "comm.h"
+#include "named_pipe_io.h"
 
 int main(int argc, char** argv) {
   HANDLE handle;
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
   } else {
     std::cout << "Connected!" << std::endl;
 
-    if (ReadFile(handle, &message, sizeof(StreamComm::Message), NULL, nullptr)) {
+    if (StreamComm::NamedPipeIO::Read(handle, &message)) {
       std::cout << "Data received, reading it..." << std::endl;
 
       switch(message.header.message_command) {
