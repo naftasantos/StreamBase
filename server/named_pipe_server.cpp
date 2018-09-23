@@ -1,4 +1,4 @@
-#include "server.h"
+#include "named_pipe_server.h"
 #include "windows_helper.h"
 
 #include <iostream>
@@ -41,12 +41,11 @@ bool NamedPipeServer::Start() {
     ok = false;
   } else {
     std::cout << "Named Pipe created" << std::endl;
-
     while(this->_handle != INVALID_HANDLE_VALUE) {
       std::cout << "Waiting for connection" << std::endl;
 
       if (ConnectNamedPipe(this->_handle, NULL) != false) {
-        std::cout << "Client connected!" << std::endl;
+        this->DispatchOnConnected();
 
         while(ReadFile(this->_handle, buffer, sizeof(buffer) - 1, &bytesRead, NULL) != false) {
           buffer[bytesRead] = '\0';
@@ -64,24 +63,41 @@ bool NamedPipeServer::Start() {
   return ok;
 }
 
-void NamedPipeServer::AddMessageCallback(CallbackFunction callback, void *data) {
-  std::tuple<CallbackFunction, void*> tuple(callback, data);
+void NamedPipeServer::AddConnectCallback(ConnectedCallback callback, void *context) {
+  std::tuple<ConnectedCallback, void*> tuple(callback, context);
 
-  this->callbacks.push_back(tuple);
+  this->connected_callbacks.push_back(tuple);
+}
+
+void NamedPipeServer::AddMessageCallback(MessageCallback callback, void *context) {
+  std::tuple<MessageCallback, void*> tuple(callback, context);
+
+  this->message_callbacks.push_back(tuple);
 }
 
 void NamedPipeServer::DispatchOnMessage() {
-  for (std::vector<std::tuple<CallbackFunction, void*>>::iterator i = this->callbacks.begin();
-       i != this->callbacks.end();
+  for (std::vector<std::tuple<MessageCallback, void*>>::iterator i = this->message_callbacks.begin();
+       i != this->message_callbacks.end();
        i++) {
     StreamComm::Message msg;
     msg.header.message_command = StreamComm::kCommandGreeting;
     msg.header.data_size = 0;
     memset(msg.data, 0, MAX_DATA_SIZE);
 
-    CallbackFunction callback = std::get<0>(*i);
-    void *data = std::get<1>(*i);
+    MessageCallback callback = std::get<0>(*i);
+    void *context = std::get<1>(*i);
 
-    callback(msg, data);
+    callback(msg, context);
+  }
+}
+
+void NamedPipeServer::DispatchOnConnected() {
+  for (std::vector<std::tuple<ConnectedCallback, void*>>::iterator i = this->connected_callbacks.begin();
+       i != this->connected_callbacks.end();
+       i++) {
+    ConnectedCallback callback = std::get<0>(*i);
+    void *context = std::get<1>(*i);
+
+    callback(context);
   }
 }
