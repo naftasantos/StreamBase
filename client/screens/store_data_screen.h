@@ -2,6 +2,8 @@
 
 #include "screen_interface.h"
 
+#include <string>
+
 class StoreDataScreen : public IScreen {
   public:
     StoreDataScreen();
