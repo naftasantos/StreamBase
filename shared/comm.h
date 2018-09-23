@@ -6,7 +6,8 @@
 namespace StreamComm{
 typedef enum {
   kCommandGreeting,
-  kCommandStoreData
+  kCommandStoreData,
+  kCommandResponse
 } Command;
 
 typedef struct {
@@ -20,6 +21,12 @@ typedef struct {
 } Message;
 
 typedef struct {
-  int id;
-} GreetCommand;
+  char data_name[11];
+  char data_value[101];
+} StoreDataCommand;
+
+typedef struct {
+  bool status;
+  char message[100];
+} ResponseCommand;
 };

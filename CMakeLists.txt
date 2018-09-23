@@ -4,10 +4,18 @@ project(StreamBase VERSION 0.1.0)
 
 set(SERVER_SOURCE server/main.cpp
                   server/server.cpp
-                  server/named_pipe_server.cpp)
+                  server/named_pipe_server.cpp
+                  server/commands/command_factory.cpp
+                  server/commands/store_command.cpp
+                  server/data_objects/storage_data.cpp)
 
 set(SERVER_INCLUDE server/server.h
-                   server/named_pipe_server.h)
+                   server/named_pipe_server.h
+                   server/commands/command_factory.h
+                   server/commands/command_interface.h
+                   server/commands/store_command.h
+                   server/data_objects/data_object_interface.h
+                   server/data_objects/storage_data.h)
 
 set(CLIENT_SOURCE client/main.cpp
                   client/screens/screen_factory.cpp
@@ -33,8 +41,8 @@ add_library(Shared STATIC ${SHARED_SOURCE} ${SHARED_INCLUDE})
 add_executable(Client ${CLIENT_SOURCE} ${CLIENT_INCLUDE})
 add_executable(Server ${SERVER_SOURCE} ${SERVER_INCLUDE})
 
-target_include_directories(Client PUBLIC shared)
-target_include_directories(Server PUBLIC shared)
+target_include_directories(Client PUBLIC shared client)
+target_include_directories(Server PUBLIC shared server)
 
 target_link_libraries(Client Shared)
 target_link_libraries(Server Shared)

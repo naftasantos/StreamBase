@@ -1,4 +1,7 @@
 #include "server.h"
+#include "comm.h"
+#include "commands/command_factory.h"
+#include "windows_helper.h"
 
 #include <iostream>
 
@@ -27,7 +30,9 @@ Server::Server() {
 }
 
 Server::~Server() {
-
+  for(std::map<std::string, IServerDataObject*>::iterator i = this->data.begin(); i != this->data.end(); i++) {
+    delete i->second;
+  }
 }
 
 void Server::Start() {
@@ -56,5 +61,29 @@ void Server::OnConnected() {
 
   while(this->named_pipe.Read(&message)) {
     std::cout << "Message received" << std::endl;
+    ICommand *command = nullptr;
+    StreamComm::ResponseCommand response = { 0 };
+
+    command = CommandFactory::GetCommand(message.header.message_command);
+
+    if (command != nullptr) {
+      response = command->Execute(message, this->data);
+      std::cout << "Command executed" << std::endl;
+    } else {
+      std::cout << "Unable to find command" << std::endl;
+      response.status = false;
+      memcpy(response.message, "Unable to find command", 22);
+    }
+
+    message.header.message_command = StreamComm::kCommandResponse;
+    message.header.data_size = sizeof(StreamComm::ResponseCommand);
+    memset(message.data, 0, MAX_DATA_SIZE);
+    memcpy(message.data, &response, message.header.data_size);
+
+    if (this->named_pipe.Write(message)) {
+      std::cout << "Response sent" << std::endl;
+    } else {
+      std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    }
   }
 }

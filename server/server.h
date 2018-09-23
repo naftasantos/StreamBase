@@ -2,6 +2,7 @@
 
 #include "named_pipe_server.h"
 #include "comm.h"
+#include "commands/command_interface.h"
 
 class Server : public INamedPipeCallback {
   public:
@@ -14,4 +15,5 @@ class Server : public INamedPipeCallback {
   private:
     Server(const Server&); // disabling copy constructor
     NamedPipeServer named_pipe;
+    std::map<std::string, IServerDataObject*> data;
 };

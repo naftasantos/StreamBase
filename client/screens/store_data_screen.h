@@ -11,4 +11,5 @@ class StoreDataScreen : public IScreen {
     virtual Screen Show();
   private:
     StoreDataScreen(const StoreDataScreen&);
+    void Send(std::string data_name, std::string data_value);
 };

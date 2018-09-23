@@ -1,4 +1,8 @@
 #include "store_data_screen.h"
+#include "screen_data.h"
+#include "named_pipe_io.h"
+#include "comm.h"
+#include "windows_helper.h"
 
 #include <iostream>
 #include <string>
@@ -46,5 +50,27 @@ Screen StoreDataScreen::Show() {
 
   std::cout << "Sending data '" << data_name << "' with the value '" << data_value << "' to the server" << std::endl;
 
+  this->Send(data_name, data_value);
+
   return next_screen;
+}
+
+void StoreDataScreen::Send(std::string data_name, std::string data_value) {
+  HANDLE handle = ScreenData::GetHandle();
+
+  StreamComm::StoreDataCommand store = { 0 };
+  memcpy(store.data_name, data_name.c_str(), data_name.length());
+  memcpy(store.data_value, data_value.c_str(), data_value.length());
+
+  StreamComm::Message message;
+  message.header.message_command = StreamComm::kCommandStoreData;
+  message.header.data_size = sizeof(StreamComm::StoreDataCommand);
+  memset(message.data, 0, MAX_DATA_SIZE);
+  memcpy(message.data, &store, sizeof(StreamComm::StoreDataCommand));
+
+  if (StreamComm::NamedPipeIO::Write(handle, message)) {
+    std::cout << "Message sent. Waiting for response." << std::endl;
+  } else {
+    std::cout << "Unable to send data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+  }
 }
