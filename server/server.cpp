@@ -1,25 +1,22 @@
 #include "server.h"
 #include "windows_helper.h"
-#include "named_pipe_props.h"
 
 #include <iostream>
 
 #define BUFFER_SIZE 1024 * 16
-#define PIPE_NAME "\\\\.\\pipe\\StreamBase"
 
 NamedPipeServer::NamedPipeServer() {
   this->_handle = NULL;
 }
 
 NamedPipeServer::~NamedPipeServer() {
-  if (this->_handle != NULL) {
-    this->CloseNamedPipe();
-  }
+  this->CloseNamedPipe();
 }
 
 void NamedPipeServer::CloseNamedPipe() {
   if (this->_handle != NULL) {
     DisconnectNamedPipe(this->_handle);
+    this->_handle = NULL;
   }
 }
 
@@ -30,7 +27,7 @@ bool NamedPipeServer::Start() {
 
   this->_handle = CreateNamedPipe(TEXT(PIPE_NAME),
                                   PIPE_ACCESS_DUPLEX,
-                                  PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                                  PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
                                   PIPE_UNLIMITED_INSTANCES,
                                   BUFFER_SIZE,
                                   BUFFER_SIZE,
@@ -55,6 +52,7 @@ bool NamedPipeServer::Start() {
           buffer[bytesRead] = '\0';
 
           std::cout << buffer << std::endl;
+          this->DispatchOnMessage();
         }
       }
 
@@ -64,4 +62,26 @@ bool NamedPipeServer::Start() {
   }
 
   return ok;
+}
+
+void NamedPipeServer::AddMessageCallback(CallbackFunction callback, void *data) {
+  std::tuple<CallbackFunction, void*> tuple(callback, data);
+
+  this->callbacks.push_back(tuple);
+}
+
+void NamedPipeServer::DispatchOnMessage() {
+  for (std::vector<std::tuple<CallbackFunction, void*>>::iterator i = this->callbacks.begin();
+       i != this->callbacks.end();
+       i++) {
+    Message msg;
+    msg.header.message_command = kCommandGreeting;
+    msg.header.data_size = 0;
+    memset(msg.data, 0, MAX_DATA_SIZE);
+
+    CallbackFunction callback = std::get<0>(*i);
+    void *data = std::get<1>(*i);
+
+    callback(msg, data);
+  }
 }

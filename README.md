@@ -1,5 +1,5 @@
 # StreamBase
-This project is intended for developing a client/server architecture with the following requirements
+This project is intended to develop a client/server architecture with the following requirements
 
 Two console applications using C++: 1. client 2. server; with the following features:
 

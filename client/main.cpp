@@ -2,8 +2,7 @@
 #include <iostream>
 
 #include "windows_helper.h"
-
-#define PIPE_NAME "\\\\.\\pipe\\StreamBase"
+#include "comm.h"
 
 int main(int argc, char** argv) {
   HANDLE handle;

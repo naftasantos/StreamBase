@@ -1,0 +1,12 @@
+{
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/client",
+    "${workspaceFolder}/server",
+    "${workspaceFolder}/shared",
+  ],
+  "C_Cpp.intelliSenseEngineFallback": "Enabled",
+  "C_Cpp.configurationWarnings": "Disabled",
+  "files.associations": {
+    "system_error": "cpp"
+  }
+}

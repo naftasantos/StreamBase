@@ -32,6 +32,4 @@
 *.app
 
 # Environment
-.vs/
-.vscode/
 build/
