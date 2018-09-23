@@ -70,6 +70,22 @@ void StoreDataScreen::Send(std::string data_name, std::string data_value) {
 
   if (StreamComm::NamedPipeIO::Write(handle, message)) {
     std::cout << "Message sent. Waiting for response." << std::endl;
+    StreamComm::Message response_message;
+    StreamComm::NamedPipeIO::Read(handle, &response_message);
+
+    if (response_message.header.message_command == StreamComm::kCommandResponse) {
+      std::cout << "Response received. Verifying Status..." << std::endl;
+      StreamComm::ResponseCommand *response = nullptr;
+      response = (StreamComm::ResponseCommand*)message.data;
+      
+      if (response->status) {
+        std::cout << "Storage command completed successfully!" << std::endl;
+      } else {
+        std::cout << "Storage command faile with response: " << response->message << std::endl;
+      }
+    } else {
+      std::cout << "Invalid Response received: " << message.header.message_command << std::endl;
+    }
   } else {
     std::cout << "Unable to send data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
   }
