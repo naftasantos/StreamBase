@@ -12,7 +12,7 @@ Two console applications using C++: 1. client 2. server; with the following feat
 * [ ] The server should be able to register a custom class (w/ related functions, attributes) which can be used by the client (see req-4)
 * [ ] The server should be able to store the custom objects created by the client for the custom class created in req-7
 
-# Assumptions:
+# Assumptions
 * NamedPipes API refers to Microsoft Windows' NamedPipes API
 * Custom class on req-7 means an instance of a class with custom values to its properties associated with a given client.
 
