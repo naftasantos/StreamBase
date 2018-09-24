@@ -22,10 +22,11 @@ Screen StoreDataScreen::Show() {
   Screen next_screen = kScreenHome;
   std::string data_name;
   std::string data_value;
-
   bool ok = true;
 
   do {
+    ok = true;
+
     std::cout << "Type in the name of the data you want to store (max " << MAX_NAME_CHARS << " chars.)" << std::endl;
     std::cin >> data_name;
 
@@ -35,11 +36,12 @@ Screen StoreDataScreen::Show() {
     } 
   } while(!ok);
 
-  ok = true;
   std::cin.ignore(INT_MAX, '\n');
   std::cin.clear();
 
   do {
+    ok = true;
+
     std::cout << "Type in the value you want to store (max " << MAX_VALUE_CHARS << " chars.)" << std::endl;
     std::getline(std::cin, data_value);
 
