@@ -49,7 +49,7 @@ StreamComm::ResponseCommand StoreCommand::Execute(StreamComm::Message& message, 
       response.status = true;
     } else {
       response.status = false;
-      memcpy(response.message, "Unable to open storage", 22);
+      memcpy(response.message, "unable to open storage", 22);
     }
   }
 

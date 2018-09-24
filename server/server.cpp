@@ -80,6 +80,9 @@ void Server::OnConnected() {
     memset(message.data, 0, MAX_DATA_SIZE);
     memcpy(message.data, &response, message.header.data_size);
 
+    std::cout << "Sending response with status '" << (response.status ? "true" : "false") <<
+                 "' and message '" << response.message << "'" << std::endl;
+
     if (this->named_pipe.Write(message)) {
       std::cout << "Response sent" << std::endl;
     } else {

@@ -1,5 +1,7 @@
 #include "storage_data.h"
 
+#include <string>
+
 StorageData::StorageData() {
 
 }
@@ -27,4 +29,17 @@ void StorageData::Store(std::string name, std::string value) {
   } else {
     this->storage[name] = value;
   }
+}
+
+bool StorageData::Read(std::string name, std::string *data) {
+  bool ret = false;
+
+  if (data != nullptr) {
+    if (this->storage.find(name) != this->storage.end()) {
+      (*data).assign(this->storage[name]);
+      ret = true;
+    }
+  }
+
+  return ret;
 }

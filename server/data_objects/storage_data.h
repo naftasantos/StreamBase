@@ -11,6 +11,7 @@ class StorageData : public IServerDataObject {
     StorageData(const StorageData& other);
 
     void Store(std::string name, std::string value);
+    bool Read(std::string name, std::string *value);
 
   private:
     std::map<std::string, std::string> storage;

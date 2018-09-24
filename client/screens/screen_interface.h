@@ -4,7 +4,8 @@ typedef enum {
   kScreenNone = 0,
   kScreenConnect,
   kScreenHome,
-  kScreenStoreData
+  kScreenStoreData,
+  kScreenReadStoredData
 } Screen;
 
 class IScreen {
