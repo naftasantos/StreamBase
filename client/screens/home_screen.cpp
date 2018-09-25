@@ -6,7 +6,8 @@ typedef enum {
   kHomeChoiceInvalid = -1,
   kHomeChoiceExit = 0,
   kHomeChoiceStoreData,
-  kHomeChoiceReadStoredData
+  kHomeChoiceReadStoredData,
+  kHomeChoiceStoreClass
 } HomeChoice;
 
 HomeScreen::HomeScreen() {
@@ -28,6 +29,7 @@ Screen HomeScreen::Show() {
     std::cout << "Select one option below:" << std::endl;
     std::cout << "1. Store Data" << std::endl;
     std::cout << "2. Read Stored Data" << std::endl;
+    std::cout << "3. Store Class" << std::endl;
     std::cout << "0. Exit" << std::endl;
 
     std::cin >> option;
@@ -58,6 +60,9 @@ bool HomeScreen::NextScreenFromOption(int option, Screen& next) {
       break;
     case kHomeChoiceReadStoredData:
       next = kScreenReadStoredData;
+      break;
+    case kHomeChoiceStoreClass:
+      next = kScreenStoreClasses;
       break;
     default:
       invalid = true;

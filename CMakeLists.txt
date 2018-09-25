@@ -8,6 +8,7 @@ set(SERVER_SOURCE server/main.cpp
                   server/commands/command_factory.cpp
                   server/commands/store_command.cpp
                   server/commands/read_stored_command.cpp
+                  server/commands/list_classes_command.cpp
                   server/data_objects/storage_data.cpp
                   server/custom_classes/custom_class_factory.cpp
                   server/custom_classes/custom_class_interface.cpp
@@ -19,6 +20,7 @@ set(SERVER_INCLUDE server/server.h
                    server/commands/command_interface.h
                    server/commands/store_command.h
                    server/commands/read_stored_command.h
+                   server/commands/list_classes_command.h
                    server/data_objects/data_object_interface.h
                    server/data_objects/storage_data.h
                    server/custom_classes/custom_class_factory.h
@@ -31,6 +33,7 @@ set(CLIENT_SOURCE client/main.cpp
                   client/screens/home_screen.cpp
                   client/screens/store_data_screen.cpp
                   client/screens/read_stored_data_screen.cpp
+                  client/screens/store_classes_screen.cpp
                   client/screens/screen_data.cpp)
 
 set(CLIENT_INCLUDE client/screens/screen_factory.h
@@ -38,6 +41,7 @@ set(CLIENT_INCLUDE client/screens/screen_factory.h
                    client/screens/home_screen.h
                    client/screens/store_data_screen.h
                    client/screens/read_stored_data_screen.h
+                   client/screens/store_classes_screen.h
                    client/screens/screen_interface.h
                    client/screens/connect_screen.h)
 

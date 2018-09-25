@@ -9,5 +9,5 @@ class ConnectScreen : public IScreen {
     virtual Screen Show();
 
   private:
-    ConnectScreen(const ConnectScreen& other);
+    ConnectScreen(const ConnectScreen& other) {}
 };

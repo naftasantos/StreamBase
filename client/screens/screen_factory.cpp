@@ -3,6 +3,7 @@
 #include "home_screen.h"
 #include "store_data_screen.h"
 #include "read_stored_data_screen.h"
+#include "store_classes_screen.h"
 
 IScreen* ScreenFactory::CreateScreen(Screen screen) {
   IScreen *screen_to_show = nullptr;
@@ -19,6 +20,9 @@ IScreen* ScreenFactory::CreateScreen(Screen screen) {
       break;
     case kScreenReadStoredData:
       screen_to_show = new ReadStoredDataScreen();
+      break;
+    case kScreenStoreClasses:
+      screen_to_show = new StoreClassesScreen();
       break;
   }
 

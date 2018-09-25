@@ -8,6 +8,7 @@ typedef enum {
   kCommandGreeting,
   kCommandStoreData,
   kCommandReadStoredData,
+  kCommandListClasses,
   kCommandResponse
 } Command;
 
