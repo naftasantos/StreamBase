@@ -14,9 +14,6 @@ class Factory {
                                 std::string method,
                                 std::vector<std::string> *result);
   private:
-    static const std::map<std::string, std::vector<std::string>> ClassMethods;
-    static const std::map<std::string, std::vector<std::string>> MethodParams;
-
     Factory() {}
     virtual ~Factory() {}
     Factory(const Factory&) {}

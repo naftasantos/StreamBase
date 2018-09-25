@@ -32,6 +32,10 @@ typedef struct {
 } ReadStoredDataCommand;
 
 typedef struct {
+  char class_name[101];
+} StoreClassCommand;
+
+typedef struct {
   bool status;
   char message[101];
 } ResponseCommand;
