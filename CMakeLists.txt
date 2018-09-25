@@ -8,7 +8,10 @@ set(SERVER_SOURCE server/main.cpp
                   server/commands/command_factory.cpp
                   server/commands/store_command.cpp
                   server/commands/read_stored_command.cpp
-                  server/data_objects/storage_data.cpp)
+                  server/data_objects/storage_data.cpp
+                  server/custom_classes/custom_class_factory.cpp
+                  server/custom_classes/custom_class_interface.cpp
+                  server/custom_classes/custom_class_runner.cpp)
 
 set(SERVER_INCLUDE server/server.h
                    server/named_pipe_server.h
@@ -17,7 +20,10 @@ set(SERVER_INCLUDE server/server.h
                    server/commands/store_command.h
                    server/commands/read_stored_command.h
                    server/data_objects/data_object_interface.h
-                   server/data_objects/storage_data.h)
+                   server/data_objects/storage_data.h
+                   server/custom_classes/custom_class_factory.h
+                   server/custom_classes/custom_class_interface.h
+                   server/custom_classes/custom_class_runner.h)
 
 set(CLIENT_SOURCE client/main.cpp
                   client/screens/screen_factory.cpp
