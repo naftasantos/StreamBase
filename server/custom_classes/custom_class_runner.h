@@ -11,15 +11,15 @@ class Runner : public ICustomClass {
     Runner();
     virtual ~Runner();
 
-    static bool GetMethods(std::vector<std::string> *methods);
-    static bool GetParams(std::string name, std::vector<std::string> *params);
+    static bool GetMethods(std::vector<std::string>& methods);
+    static bool GetParams(const std::string& name, std::vector<std::string>& params);
 
     virtual bool Execute(const std::string &name,
                          const std::vector<std::string> &params,
-                         std::string *output);
+                         std::string &output);
   private:
     Runner(const Runner&) {}
 
-    bool Run(const std::vector<std::string> &params, std::string *output);
+    bool Run(const std::vector<std::string> &params, std::string &output);
 };
 };

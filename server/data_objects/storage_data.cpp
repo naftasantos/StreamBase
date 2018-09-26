@@ -6,11 +6,6 @@ StorageData::StorageData() {
 
 }
 
-StorageData::StorageData(const StorageData& other)
-  : StorageData() {
-  this->SetStorage(other.GetStorage());
-}
-
 StorageData::~StorageData() {
 
 }

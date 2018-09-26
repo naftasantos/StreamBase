@@ -5,11 +5,12 @@
 
 namespace StreamComm{
 typedef enum {
-  kCommandGreeting,
+  kCommandGreeting = 0x00,
   kCommandStoreData,
   kCommandReadStoredData,
   kCommandListClasses,
-  kCommandResponse
+  kCommandStoreClass,
+  kCommandResponse = 0xFF
 } Command;
 
 typedef struct {

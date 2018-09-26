@@ -26,6 +26,18 @@ Screen StoreClassesScreen::Show() {
     if (response.status) {
       std::string chosen_class = ChooseClass(std::string(response.message));
       std::cout << "You chose " << chosen_class << std::endl;
+      if (StoreClass(chosen_class, response)) {
+        if (response.status) {
+          std::cout << "Class stored!" << std::endl;
+          if (CallMethod(chosen_class, response)) {
+            std::cout << "Command executed successfully" << std::endl;
+          }
+        } else {
+          std::cerr << "Command to register class failed with message: " << response.message << std::endl;
+        }
+      } else {
+        std::cerr << "Unable to store class" << std::endl;
+      }
     } else {
       std::cerr << "Command failed with message: " << response.message << std::endl;
     }
@@ -95,4 +107,78 @@ std::string StoreClassesScreen::ChooseClass(std::string classes) {
   } while(!valid);
 
   return classes_names.at(choice);
+}
+
+bool StoreClassesScreen::StoreClass(std::string class_name, StreamComm::ResponseCommand& response) {
+  bool ok = false;
+
+  HANDLE handle = ScreenData::GetHandle();
+  StreamComm::Message message;
+  StreamComm::StoreClassCommand command = { 0 };
+  message.header.message_command = StreamComm::kCommandStoreClass;
+  message.header.data_size = sizeof(StreamComm::StoreClassCommand);
+  memset(message.data, 0, MAX_DATA_SIZE);
+
+  if (class_name.length() > 100) {
+    ok = false;
+    std::cerr << "Class name too big" << std::endl;
+  } else {
+    memcpy(command.class_name, class_name.c_str(), class_name.length() * sizeof(char));
+    memcpy(message.data, &command, sizeof(StreamComm::StoreClassCommand));
+
+    if (StreamComm::NamedPipeIO::Write(handle, message)) {
+      StreamComm::Message response_message;
+
+      if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
+        if (response_message.header.message_command == StreamComm::kCommandResponse) {
+          memcpy(&response, response_message.data, sizeof(StreamComm::ResponseCommand));
+          ok = true;
+        } else {
+          std::cerr << "Invalid response received: " << response_message.header.message_command << std::endl;
+        }
+      } else {
+        std::cerr << "Unable to read response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      }
+    } else {
+      std::cerr << "Error writing message: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    }
+  }
+
+  return ok;
+}
+
+bool StoreClassesScreen::CallMethod(std::string class_name, StreamComm::ResponseCommand& response) {
+  bool ok = false;
+
+  std::istringstream methods(response.message);
+  std::vector<std::string> method_names;
+  int count = 0;
+
+  std::cout << "Choose a method to call" << std::endl;
+  while(std::getline(methods, class_name, ';')) {
+    std::cout << "[" << count++ << "]: " << class_name << std::endl;
+    method_names.push_back(class_name);
+  }
+
+  if (count == 0) {
+    ok = false;
+  } else {
+    bool valid = false;
+    int choice;
+
+    do {
+      std::cin >> choice;
+
+      if (choice >= 0 && choice < count) {
+        valid = true;
+      } else {
+        std::cerr << "Invalid choice" << std::endl;
+      }
+    } while(!valid);
+
+    std::cout << "Method chosen: " << method_names.at(choice) << std::endl;
+    ok = true;
+  }
+
+  return ok;
 }

@@ -8,12 +8,12 @@ class StorageData : public IServerDataObject {
   public:
     StorageData();
     virtual ~StorageData();
-    StorageData(const StorageData& other);
 
     void Store(std::string name, std::string value);
     bool Read(std::string name, std::string *value);
 
   private:
+    StorageData(const StorageData& other) {}
     std::map<std::string, std::string> storage;
 
     const std::map<std::string, std::string>& GetStorage() const;
