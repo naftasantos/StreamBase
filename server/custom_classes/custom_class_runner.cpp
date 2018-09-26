@@ -45,7 +45,7 @@ bool CustomClass::Runner::Run(const std::vector<std::string>& params, std::strin
 
     if (ok) {
       std::stringstream stream;
-      stream << "the runner ran " << param << " meters.";
+      stream << "the runner ran for " << param << " minutes.";
       output.assign(stream.str());
     }
   }

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "comm.h"
+#include "named_pipe_io.h"
 
 class INamedPipeCallback {
   public:
@@ -21,19 +22,21 @@ class NamedPipeServer{
     NamedPipeServer();
     virtual ~NamedPipeServer();
 
-    void AddMessageCallback(MessageCallback callback, INamedPipeCallback *context);
+    // void AddMessageCallback(MessageCallback callback, INamedPipeCallback *context);
     void AddConnectCallback(ConnectedCallback callback, INamedPipeCallback *context);
     bool Start();
     bool Write(StreamComm::Message &message);
     bool Read(StreamComm::Message* message);
+    bool WriteAsync(StreamComm::IWriteCallback *callback, void *data);
+    bool ReadAsync(StreamComm::IReadCallback *callback, void *data);
   private:
     // disabling copy constructor
     NamedPipeServer(const NamedPipeServer &other) {}
     void CloseNamedPipe();
-    void DispatchOnMessage();
+    // void DispatchOnMessage();
     void DispatchOnConnected();
     
-    std::vector<std::tuple<MessageCallback, INamedPipeCallback*>> message_callbacks;
+    // std::vector<std::tuple<MessageCallback, INamedPipeCallback*>> message_callbacks;
     std::vector<std::tuple<ConnectedCallback, INamedPipeCallback*>> connected_callbacks;
 
     HANDLE _handle;
