@@ -194,7 +194,17 @@ bool StoreClassesScreen::CallMethod(std::string class_name, StreamComm::Response
           param_values << param_value << ";";
         }
 
-        std::cout << "will execute " << chosen_method << " with params: " << param_values.str() << std::endl;
+        std::cout << "Executing " << chosen_method << std::endl;
+        if (ExecuteMethod(chosen_method, param_values.str(), response)) {
+          if (response.status) {
+            std::cout << "Method executed with the result: " << response.message << std::endl;
+            ok = true;
+          } else {
+            std::cerr << "Execute Method failed with message: " << response.message << std::endl;
+          }
+        } else {
+          std::cerr << "Unable to execute method" << std::endl;
+        }
       } else {
         std::cerr << "Params listing failed with message: " << response.message << std::endl;
       }
@@ -226,6 +236,48 @@ bool StoreClassesScreen::ListParams(std::string class_name,
     memcpy(message.data, &command, sizeof(StreamComm::ListParamsCommand));
 
     std::cout << "Class name: " << command.class_name << std::endl;
+
+    if (StreamComm::NamedPipeIO::Write(handle, message)) {
+      StreamComm::Message response_message;
+
+      if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
+        if (response_message.header.message_command == StreamComm::kCommandResponse) {
+          memcpy(&response, response_message.data, sizeof(StreamComm::ResponseCommand));
+          ok = true;
+        } else {
+          std::cerr << "Invalid response received: " << response_message.header.message_command << std::endl;
+        }
+      } else {
+        std::cerr << "Unable to read response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      }
+    } else {
+      std::cerr << "Error writing message: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    }
+  }
+
+  return ok;
+}
+
+bool StoreClassesScreen::ExecuteMethod(std::string method_name,
+                                       std::string params,
+                                       StreamComm::ResponseCommand& response) {
+  bool ok = false;
+
+  HANDLE handle = ScreenData::GetHandle();
+  StreamComm::Message message;
+  StreamComm::ExecuteMethodCommand command = { 0 };
+  message.header.message_command = StreamComm::kCommandRunMethod;
+  message.header.data_size = sizeof(StreamComm::ExecuteMethodCommand);
+  memset(message.data, 0, MAX_DATA_SIZE);
+
+  if (method_name.length() > 100) {
+    ok = false;
+  } else if (params.length() > 100) {
+    ok = false;
+  } else {
+    memcpy(command.method_name, method_name.c_str(), method_name.length() * sizeof(char));
+    memcpy(command.params, params.c_str(), params.length() * sizeof(char));
+    memcpy(message.data, &command, sizeof(StreamComm::ExecuteMethodCommand));
 
     if (StreamComm::NamedPipeIO::Write(handle, message)) {
       StreamComm::Message response_message;

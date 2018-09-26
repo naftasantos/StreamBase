@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
 
 #define METHOD_RUN "run"
 #define METHOD_RUN_PARAM_TIME "time"
@@ -48,6 +49,8 @@ bool CustomClass::Runner::Run(const std::vector<std::string>& params, std::strin
       output.assign(stream.str());
     }
   }
+
+  std::cout << "Executed with result: " << output << std::endl;
 
   return ok;
 }

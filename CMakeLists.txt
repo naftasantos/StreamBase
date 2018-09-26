@@ -11,6 +11,7 @@ set(SERVER_SOURCE server/main.cpp
                   server/commands/list_classes_command.cpp
                   server/commands/store_class_command.cpp
                   server/commands/list_params_command.cpp
+                  server/commands/execute_method_command.cpp
                   server/data_objects/storage_data.cpp
                   server/data_objects/stored_class_data.cpp
                   server/custom_classes/custom_class_factory.cpp
@@ -26,6 +27,7 @@ set(SERVER_INCLUDE server/server.h
                    server/commands/list_classes_command.h
                    server/commands/store_class_command.h
                    server/commands/list_params_command.h
+                   server/commands/execute_method_command.h
                    server/data_objects/data_object_interface.h
                    server/data_objects/storage_data.h
                    server/data_objects/stored_class_data.h
