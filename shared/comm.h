@@ -10,6 +10,7 @@ typedef enum {
   kCommandReadStoredData,
   kCommandListClasses,
   kCommandStoreClass,
+  kCommandListParams,
   kCommandResponse = 0xFF
 } Command;
 
@@ -35,6 +36,11 @@ typedef struct {
 typedef struct {
   char class_name[101];
 } StoreClassCommand;
+
+typedef struct {
+  char class_name[101];
+  char method_name[101];
+} ListParamsCommand;
 
 typedef struct {
   bool status;

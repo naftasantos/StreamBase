@@ -4,6 +4,7 @@
 #include "read_stored_command.h"
 #include "list_classes_command.h"
 #include "store_class_command.h"
+#include "list_params_command.h"
 
 ICommand* CommandFactory::GetCommand(StreamComm::Command command) {
   ICommand *result = nullptr;
@@ -20,6 +21,9 @@ ICommand* CommandFactory::GetCommand(StreamComm::Command command) {
       break;
     case StreamComm::kCommandStoreClass:
       result = new StoreClassCommand();
+      break;
+    case StreamComm::kCommandListParams:
+      result = new ListParamsCommand();
       break;
   }
 

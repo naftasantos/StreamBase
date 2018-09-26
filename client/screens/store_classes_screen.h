@@ -17,4 +17,5 @@ class StoreClassesScreen : public IScreen {
     std::string ChooseClass(std::string classes);
     bool StoreClass(std::string class_name, StreamComm::ResponseCommand& response);
     bool CallMethod(std::string class_name, StreamComm::ResponseCommand& response);
+    bool ListParams(std::string class_name, std::string method_name, StreamComm::ResponseCommand& response);
 };
