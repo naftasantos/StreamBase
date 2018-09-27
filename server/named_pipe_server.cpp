@@ -8,6 +8,12 @@
 
 NamedPipeServer::NamedPipeServer() {
   this->_handle = NULL;
+  // memset(&(this->overlap), 0, sizeof(OVERLAPPED));
+
+  this->overlap.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
+  if (this->overlap.hEvent == NULL) {
+    std::cerr << "Failed to create event" << std::endl;
+  }
 }
 
 NamedPipeServer::~NamedPipeServer() {
@@ -21,14 +27,21 @@ void NamedPipeServer::CloseNamedPipe() {
   }
 }
 
-bool NamedPipeServer::Start() {
+bool NamedPipeServer::Start(bool async) {
   bool ok = false;
-  // char buffer[1024];
-  DWORD bytesRead = 0;
+  DWORD options = PIPE_ACCESS_DUPLEX;
+  DWORD pipe_mode = PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE;
+
+  if (async) {
+    options |= FILE_FLAG_OVERLAPPED;
+    pipe_mode |= PIPE_NOWAIT;
+  } else {
+    pipe_mode |= PIPE_WAIT;
+  }
 
   this->_handle = CreateNamedPipe(TEXT(PIPE_NAME),
-                                  PIPE_ACCESS_DUPLEX,
-                                  PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                                  options,
+                                  pipe_mode,
                                   PIPE_UNLIMITED_INSTANCES,
                                   BUFFER_SIZE,
                                   BUFFER_SIZE,
@@ -42,15 +55,19 @@ bool NamedPipeServer::Start() {
     ok = false;
   } else {
     std::cout << "Named Pipe created" << std::endl;
-    while(this->_handle != INVALID_HANDLE_VALUE) {
-      std::cout << "Waiting for connection" << std::endl;
+    std::cout << "Waiting for connection" << std::endl;
 
-      if (ConnectNamedPipe(this->_handle, NULL) != false) {
+    if (async) {
+      std::cout << "Async waiting..." << std::endl;
+      if (ConnectNamedPipe(this->_handle, (LPOVERLAPPED)&(this->overlap))) {
+        std::cout << "Waiting for event..." << std::endl;
+        WaitForSingleObjectEx(this->overlap.hEvent, INFINITE, TRUE);
         this->DispatchOnConnected();
       }
-
-      std::cout << "disconnecting..." << std::endl;
-      DisconnectNamedPipe(this->_handle);
+    } else {
+      if (ConnectNamedPipe(this->_handle, NULL)) {
+        this->DispatchOnConnected();
+      }
     }
   }
 

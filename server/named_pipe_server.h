@@ -24,7 +24,7 @@ class NamedPipeServer{
 
     // void AddMessageCallback(MessageCallback callback, INamedPipeCallback *context);
     void AddConnectCallback(ConnectedCallback callback, INamedPipeCallback *context);
-    bool Start();
+    bool Start(bool async);
     bool Write(StreamComm::Message &message);
     bool Read(StreamComm::Message* message);
     bool WriteAsync(StreamComm::IWriteCallback *callback, void *data);
@@ -35,6 +35,8 @@ class NamedPipeServer{
     void CloseNamedPipe();
     // void DispatchOnMessage();
     void DispatchOnConnected();
+
+    OVERLAPPED overlap;
     
     // std::vector<std::tuple<MessageCallback, INamedPipeCallback*>> message_callbacks;
     std::vector<std::tuple<ConnectedCallback, INamedPipeCallback*>> connected_callbacks;

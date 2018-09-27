@@ -36,25 +36,32 @@ static VOID WINAPI ReadCallback(DWORD error, DWORD bytes_written, LPOVERLAPPED o
 
 bool StreamComm::NamedPipeIO::ReadAsync(HANDLE handle, StreamComm::IReadCallback *callback, void *data) {
   bool status = true;
-
+  
+  std::cout << "StreamComm::NamedPipeIO::ReadAsync" << std::endl;
+  
   if (handle == INVALID_HANDLE_VALUE) {
+    std::cerr << "Invalid handle" << std::endl;
     status = false;
     SetLastError(ERROR_INVALID_PARAMETER);
   } else {
     CallbackData *callback_data = new CallbackData();
+    std::cerr << "Created callback" << std::endl;
 
     memset(callback_data, 0, sizeof(CallbackData));
 
+    std::cerr << "Setting to 0" << std::endl;
     callback_data->context_data = data;
     callback_data->context = dynamic_cast<IStreamCallback*>(callback);
     callback_data->data = (void*)new Message();
     memset(callback_data->data, 0, sizeof(Message));
+    std::cerr << "Created context" << std::endl;
 
     status = ReadFileEx(handle,
                         callback_data->data,
                         sizeof(Message),
                         (LPOVERLAPPED)callback_data,
                         (LPOVERLAPPED_COMPLETION_ROUTINE)ReadCallback);
+    std::cerr << "Read file: " << (status ? "Success" : "Fail") << std::endl;
   }
   return status;
 }

@@ -16,8 +16,6 @@
 //   }
 // }
 
-bool Server::Status = true;
-
 void on_connected(INamedPipeCallback *context) {
   Server *server = dynamic_cast<Server*>(context);
 
@@ -28,8 +26,8 @@ void on_connected(INamedPipeCallback *context) {
   }
 }
 
-Server::Server() {
-
+Server::Server()
+  : status(true) {
 }
 
 Server::~Server() {
@@ -41,7 +39,7 @@ Server::~Server() {
 void Server::Start() {
   this->named_pipe.AddConnectCallback(std::cref(on_connected), this);
   // this->named_pipe.AddMessageCallback(std::cref(on_message), this);
-  this->named_pipe.Start();
+  this->named_pipe.Start(Config::Async);
 }
 
 void Server::OnMessage(StreamComm::Message &message) {
@@ -72,18 +70,22 @@ void Server::OnMessage(StreamComm::Message &message) {
     std::cout << "Response sent" << std::endl;
     ReadNextMessage();
   } else {
+    this->status = false;
     std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
   }
 }
 
 void Server::ReadNextMessage() {
   if (Config::Async) {
-    this->named_pipe.ReadAsync(this, nullptr);
+    std::cout << "Reading Async" << std::endl;
+    this->status = this->named_pipe.ReadAsync(this, nullptr);
   } else {
+    std::cout << "Reading normal" << std::endl;
     StreamComm::Message message;
     if(this->named_pipe.Read(&message)) {
       OnMessage(message);
     } else {
+      this->status = false;
       std::cerr << "Error reading message" << std::endl;
     }
   }
@@ -98,8 +100,8 @@ void Server::OnConnected() {
   memset(message.data, 0, MAX_DATA_SIZE);
 
   if (this->named_pipe.Write(message)) {
-    ReadNextMessage();
     std::cout << "Message sent successfully" << std::endl;
+    ReadNextMessage();
   } else {
     std::cerr << "Error sending greeting" << std::endl;
   }
@@ -113,4 +115,8 @@ void Server::OnRead(bool success, StreamComm::Message message, void *data) {
   if (success) {
     OnMessage(message);
   }
+}
+
+bool Server::GetStatus() {
+  return this->status;
 }

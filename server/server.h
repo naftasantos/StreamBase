@@ -12,6 +12,7 @@ class Server : public INamedPipeCallback, public StreamComm::IReadCallback, publ
 
     void Start();
     void OnConnected();
+    bool GetStatus();
 
     virtual void OnWrite(bool success, StreamComm::Message message, void *data);
     virtual void OnRead(bool success, StreamComm::Message message, void *data);
@@ -22,5 +23,5 @@ class Server : public INamedPipeCallback, public StreamComm::IReadCallback, publ
 
     void OnMessage(StreamComm::Message &message);
     void ReadNextMessage();
-    static bool Status;
+    bool status;
 };
