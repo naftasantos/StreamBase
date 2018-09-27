@@ -86,11 +86,9 @@ void NamedPipeServer::AddConnectCallback(ConnectedCallback callback, INamedPipeC
 // }
 
 void NamedPipeServer::DispatchOnConnected() {
-  for (std::vector<std::tuple<ConnectedCallback, INamedPipeCallback*>>::iterator i = this->connected_callbacks.begin();
-       i != this->connected_callbacks.end();
-       i++) {
-    ConnectedCallback callback = std::get<0>(*i);
-    INamedPipeCallback *context = std::get<1>(*i);
+  for (auto item : this->connected_callbacks) {
+    ConnectedCallback callback = std::get<0>(item);
+    INamedPipeCallback *context = std::get<1>(item);
 
     callback(context);
   }
