@@ -8,7 +8,7 @@
 
 NamedPipeServer::NamedPipeServer() {
   this->_handle = NULL;
-  // memset(&(this->overlap), 0, sizeof(OVERLAPPED));
+  memset(&(this->overlap), 0, sizeof(OVERLAPPED));
 
   this->overlap.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
   if (this->overlap.hEvent == NULL) {
@@ -30,23 +30,22 @@ void NamedPipeServer::CloseNamedPipe() {
 bool NamedPipeServer::Start(bool async) {
   bool ok = false;
   DWORD options = PIPE_ACCESS_DUPLEX;
-  DWORD pipe_mode = PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE;
+  DWORD pipe_mode = PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT;
 
   if (async) {
+    std::cout << "Async mode. Setting overlapped to the options" << std::endl;
     options |= FILE_FLAG_OVERLAPPED;
-    pipe_mode |= PIPE_NOWAIT;
-  } else {
-    pipe_mode |= PIPE_WAIT;
   }
 
-  this->_handle = CreateNamedPipe(TEXT(PIPE_NAME),
-                                  options,
-                                  pipe_mode,
-                                  PIPE_UNLIMITED_INSTANCES,
-                                  BUFFER_SIZE,
-                                  BUFFER_SIZE,
-                                  NMPWAIT_USE_DEFAULT_WAIT,
-                                  NULL);
+  this->_handle = CreateNamedPipe(
+    TEXT(PIPE_NAME),
+    options,
+    pipe_mode,
+    PIPE_UNLIMITED_INSTANCES,
+    BUFFER_SIZE,
+    BUFFER_SIZE,
+    NMPWAIT_USE_DEFAULT_WAIT,
+    NULL);
 
   if (this->_handle == INVALID_HANDLE_VALUE) {
     std::cerr << "Unable to create Named Pipe" << std::endl;
@@ -60,9 +59,38 @@ bool NamedPipeServer::Start(bool async) {
     if (async) {
       std::cout << "Async waiting..." << std::endl;
       if (ConnectNamedPipe(this->_handle, (LPOVERLAPPED)&(this->overlap))) {
-        std::cout << "Waiting for event..." << std::endl;
-        WaitForSingleObjectEx(this->overlap.hEvent, INFINITE, TRUE);
+        // According to Microsoft at
+        // https://docs.microsoft.com/en-us/windows/desktop/sync/synchronization-and-overlapped-input-and-output,
+        // When a function is called to perform an overlapped operation, the operation might be completed before the
+        // function returns. When this happens, the results are handled as if the operation had been performed
+        // synchronously.
         this->DispatchOnConnected();
+      } else {
+        DWORD wait_result;
+        std::cout << "Current connect state: "
+                  << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+        switch (GetLastError()) 
+        {
+          case ERROR_IO_PENDING:
+            ok = true;
+            break; 
+          case ERROR_PIPE_CONNECTED: 
+            if (SetEvent(this->overlap.hEvent)) {
+              break; 
+            }
+          default: 
+            std::cerr << "Connect failed: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+            ok = false;
+            break;
+        }
+
+        wait_result = WaitForSingleObjectEx(this->overlap.hEvent, INFINITE, TRUE);
+
+        if (wait_result == 0) { // The first handle was signaled
+          this->DispatchOnConnected();
+        } else{
+          ok = false;
+        }
       }
     } else {
       if (ConnectNamedPipe(this->_handle, NULL)) {
