@@ -23,7 +23,13 @@ NamedPipeServer::~NamedPipeServer() {
 void NamedPipeServer::CloseNamedPipe() {
   if (this->_handle != NULL) {
     DisconnectNamedPipe(this->_handle);
+    CloseHandle(this->_handle);
     this->_handle = NULL;
+  }
+
+  if (this->overlap.hEvent != nullptr) {
+    CloseHandle(this->overlap.hEvent);
+    this->overlap.hEvent = nullptr;
   }
 }
 
@@ -64,7 +70,7 @@ bool NamedPipeServer::Start(bool async) {
         // When a function is called to perform an overlapped operation, the operation might be completed before the
         // function returns. When this happens, the results are handled as if the operation had been performed
         // synchronously.
-        this->DispatchOnConnected();
+        ok = true;
       } else {
         DWORD wait_result;
         std::cout << "Current connect state: "
@@ -87,56 +93,19 @@ bool NamedPipeServer::Start(bool async) {
         wait_result = WaitForSingleObjectEx(this->overlap.hEvent, INFINITE, TRUE);
 
         if (wait_result == 0) { // The first handle was signaled
-          this->DispatchOnConnected();
+          ok = true;
         } else{
           ok = false;
         }
       }
     } else {
       if (ConnectNamedPipe(this->_handle, NULL)) {
-        this->DispatchOnConnected();
+        ok = true;
       }
     }
   }
 
   return ok;
-}
-
-void NamedPipeServer::AddConnectCallback(ConnectedCallback callback, INamedPipeCallback *context) {
-  std::tuple<ConnectedCallback, INamedPipeCallback*> tuple(callback, context);
-
-  this->connected_callbacks.push_back(tuple);
-}
-
-// void NamedPipeServer::AddMessageCallback(MessageCallback callback, INamedPipeCallback *context) {
-//   std::tuple<MessageCallback, INamedPipeCallback*> tuple(callback, context);
-
-//   this->message_callbacks.push_back(tuple);
-// }
-
-// void NamedPipeServer::DispatchOnMessage() {
-//   for (std::vector<std::tuple<MessageCallback, INamedPipeCallback*>>::iterator i = this->message_callbacks.begin();
-//        i != this->message_callbacks.end();
-//        i++) {
-//     StreamComm::Message msg;
-//     msg.header.message_command = StreamComm::kCommandGreeting;
-//     msg.header.data_size = 0;
-//     memset(msg.data, 0, MAX_DATA_SIZE);
-
-//     MessageCallback callback = std::get<0>(*i);
-//     INamedPipeCallback *context = std::get<1>(*i);
-
-//     callback(msg, context);
-//   }
-// }
-
-void NamedPipeServer::DispatchOnConnected() {
-  for (auto item : this->connected_callbacks) {
-    ConnectedCallback callback = std::get<0>(item);
-    INamedPipeCallback *context = std::get<1>(item);
-
-    callback(context);
-  }
 }
 
 bool NamedPipeServer::Write(StreamComm::Message &message) {
@@ -147,8 +116,8 @@ bool NamedPipeServer::Read(StreamComm::Message *message) {
   return StreamComm::NamedPipeIO::Read(this->_handle, message);
 }
 
-bool NamedPipeServer::WriteAsync(StreamComm::IWriteCallback *callback, void *data) {
-  return StreamComm::NamedPipeIO::WriteAsync(this->_handle, callback, data);
+bool NamedPipeServer::WriteAsync(StreamComm::Message& message, StreamComm::IWriteCallback *callback, void *data) {
+  return StreamComm::NamedPipeIO::WriteAsync(this->_handle, message, callback, data);
 }
 
 bool NamedPipeServer::ReadAsync(StreamComm::IReadCallback *callback, void *data) {

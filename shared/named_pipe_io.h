@@ -32,7 +32,7 @@ class NamedPipeIO {
     static bool Write(HANDLE handle, StreamComm::Message &message);
 
     static bool ReadAsync(HANDLE handle, IReadCallback *context, void *data);
-    static bool WriteAsync(HANDLE handle, IWriteCallback *context, void *data);
+    static bool WriteAsync(HANDLE handle, StreamComm::Message& message, IWriteCallback *context, void *data);
   private:
     // This class should be static only
     NamedPipeIO() {}
