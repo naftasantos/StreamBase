@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
   if (Config::Async) {
     do {
-      
+      SleepEx(1000, TRUE);
     } while(server.GetStatus());
   }
 

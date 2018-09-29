@@ -53,13 +53,14 @@ void Server::OnMessage(StreamComm::Message &message) {
       this->status = false;
       std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
     }
-  }
-  if (this->named_pipe.Write(message)) {
-    std::cout << "Response sent" << std::endl;
-    ReadNextMessage();
   } else {
-    this->status = false;
-    std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    if (this->named_pipe.Write(message)) {
+      std::cout << "Response sent" << std::endl;
+      ReadNextMessage();
+    } else {
+      this->status = false;
+      std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    }
   }
 }
 
@@ -108,6 +109,7 @@ void Server::OnConnected() {
 
 void Server::OnWrite(bool success, StreamComm::Message message, void *data) {
   if (success) {
+    std::cout << "On Write!" << std::endl;
     ReadNextMessage();
   } else {
     this->status = false;
@@ -117,6 +119,7 @@ void Server::OnWrite(bool success, StreamComm::Message message, void *data) {
 
 void Server::OnRead(bool success, StreamComm::Message message, void *data) {
   if (success) {
+    std::cout << "On Read!" << std::endl;
     OnMessage(message);
   } else {
     this->status = false;
