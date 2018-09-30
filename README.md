@@ -12,14 +12,14 @@ Two console applications using C++: 1. client 2. server; with the following feat
 * [x] The server should be able to register a custom class (w/ related functions, attributes) which can be used by the client (see req-4)
 * [x] The server should be able to store the custom objects created by the client for the custom class created in req-7
 
-# Assumptions
+## Assumptions
 * NamedPipes API refers to Microsoft Windows' NamedPipes API
 * Custom class on req-7 means an instance of a class with custom values to its properties associated with a given client.
 
-# Decisions
+## Decisions
 * Since there is no requirement for multiple simultaneous connections, I decided to have single connection implemented to speed up the development
 
-# How to use
+## How to use
 Call `server.exe` and then `client.exe`. Once the client is shut down the server will as well.
 
 The client will show a menu where you can select options from which you will interact with the server through the clients interface.
