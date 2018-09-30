@@ -18,3 +18,10 @@ Two console applications using C++: 1. client 2. server; with the following feat
 
 # Decisions
 * Since there is no requirement for multiple simultaneous connections, I decided to have single connection implemented to speed up the development
+
+# How to use
+Call `server.exe` and then `client.exe`. Once the client is shut down the server will as well.
+
+The client will show a menu where you can select options from which you will interact with the server through the clients interface.
+
+Both the server and client accepts the parameter `-async`, when this parameter is passed, they will behave asynchronously.
