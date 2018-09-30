@@ -4,6 +4,7 @@
 #include "comm.h"
 #include "named_pipe_io.h"
 #include "windows_helper.h"
+#include "config.h"
 
 #include <iostream>
 #include <string>
@@ -72,6 +73,12 @@ Screen ReadStoredDataScreen::Show() {
   } while(!ok);
 
   this->Send(data_name);
+
+  if (Config::Async) {
+    do {
+      SleepEx(1000, TRUE);
+    } while(!this->finished);
+  }
 
   return next_screen;
 }
