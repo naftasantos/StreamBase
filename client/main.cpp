@@ -19,6 +19,8 @@ int main(int argc, char** argv) {
     } else {
       current_screen = kScreenNone;
     }
+
+    std::cout << "next_screen: " << current_screen << std::endl;
   } while(current_screen != kScreenNone);
   
   ScreenData::Finish();

@@ -30,7 +30,7 @@ static VOID WINAPI ReadCallback(DWORD error, DWORD bytes_written, LPOVERLAPPED o
     std::cout << "Overlap is not null" << std::endl;
     callback_data = (StreamComm::CallbackData*)overlap;
     StreamComm::Message *message = (StreamComm::Message*)callback_data->data;
-    StreamComm::IReadCallback *callback = dynamic_cast<StreamComm::IReadCallback*>(callback_data->context);
+    StreamComm::IStreamCallback *callback = dynamic_cast<StreamComm::IStreamCallback*>(callback_data->context);
 
     if (callback != nullptr) {
       std::cout << "Callback is not null" << std::endl;
@@ -52,7 +52,7 @@ static VOID WINAPI WriteCallback(DWORD error, DWORD bytes_written, LPOVERLAPPED 
     std::cout << "Overlap is not null" << std::endl;
     callback_data = (StreamComm::CallbackData*)overlap;
     StreamComm::Message *message = (StreamComm::Message*)callback_data->data;
-    StreamComm::IWriteCallback *callback = dynamic_cast<StreamComm::IWriteCallback*>(callback_data->context);
+    StreamComm::IStreamCallback *callback = dynamic_cast<StreamComm::IStreamCallback*>(callback_data->context);
 
     if (callback != nullptr) {
       std::cout << "Callback is not null" << std::endl;
@@ -63,7 +63,7 @@ static VOID WINAPI WriteCallback(DWORD error, DWORD bytes_written, LPOVERLAPPED 
   FreeCallbackData(callback_data);
 }
 
-bool StreamComm::NamedPipeIO::ReadAsync(HANDLE handle, StreamComm::IReadCallback *callback, void *data) {
+bool StreamComm::NamedPipeIO::ReadAsync(HANDLE handle, StreamComm::IStreamCallback *callback, void *data) {
   bool status = true;
   
   std::cout << "StreamComm::NamedPipeIO::ReadAsync" << std::endl;
@@ -110,11 +110,11 @@ bool StreamComm::NamedPipeIO::Read(HANDLE handle, StreamComm::Message *message) 
     status = false;
     SetLastError(ERROR_INVALID_PARAMETER);
   } else {
-        status = ReadFile(handle,
-                          message,
-                          sizeof(StreamComm::Message),
-                          NULL,
-                          NULL);
+    status = ReadFile(handle,
+                      message,
+                      sizeof(StreamComm::Message),
+                      NULL,
+                      NULL);
 
   }
 
@@ -123,7 +123,7 @@ bool StreamComm::NamedPipeIO::Read(HANDLE handle, StreamComm::Message *message) 
 
 bool StreamComm::NamedPipeIO::WriteAsync(HANDLE handle,
                                          StreamComm::Message &message,
-                                         StreamComm::IWriteCallback *callback,
+                                         StreamComm::IStreamCallback *callback,
                                          void *data) {
   bool status = true;
 

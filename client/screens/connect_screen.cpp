@@ -17,6 +17,10 @@ ConnectScreen::~ConnectScreen() {
 
 }
 
+void ConnectScreen::OnWrite(bool success, StreamComm::Message message, void *data) {
+
+}
+
 void ConnectScreen::OnRead(bool success, StreamComm::Message message, void *data) {
   if (success) {
     ReceivedMessage(message);

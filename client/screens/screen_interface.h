@@ -1,5 +1,7 @@
 #pragma once
 
+#include "named_pipe_io.h"
+
 typedef enum {
   kScreenNone = 0,
   kScreenConnect,
@@ -9,8 +11,10 @@ typedef enum {
   kScreenStoreClasses
 } Screen;
 
-class IScreen {
+class IScreen : public StreamComm::IStreamCallback {
   public:
-    virtual ~IScreen() {};
+    ~IScreen() {};
     virtual Screen Show() = 0;
+    virtual void OnRead(bool success, StreamComm::Message message, void *data) = 0;
+    virtual void OnWrite(bool success, StreamComm::Message message, void *data) = 0;
 };

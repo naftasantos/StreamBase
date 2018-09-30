@@ -16,6 +16,14 @@ ReadStoredDataScreen::~ReadStoredDataScreen() {
 
 }
 
+void ReadStoredDataScreen::OnRead(bool success, StreamComm::Message message, void *data) {
+
+}
+
+void ReadStoredDataScreen::OnWrite(bool success, StreamComm::Message message, void *data) {
+
+}
+
 Screen ReadStoredDataScreen::Show() {
   Screen next_screen = kScreenHome;
   std::string data_name;

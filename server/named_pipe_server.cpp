@@ -116,10 +116,10 @@ bool NamedPipeServer::Read(StreamComm::Message *message) {
   return StreamComm::NamedPipeIO::Read(this->_handle, message);
 }
 
-bool NamedPipeServer::WriteAsync(StreamComm::Message& message, StreamComm::IWriteCallback *callback, void *data) {
+bool NamedPipeServer::WriteAsync(StreamComm::Message& message, StreamComm::IStreamCallback *callback, void *data) {
   return StreamComm::NamedPipeIO::WriteAsync(this->_handle, message, callback, data);
 }
 
-bool NamedPipeServer::ReadAsync(StreamComm::IReadCallback *callback, void *data) {
+bool NamedPipeServer::ReadAsync(StreamComm::IStreamCallback *callback, void *data) {
   return StreamComm::NamedPipeIO::ReadAsync(this->_handle, callback, data);
 }

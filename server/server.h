@@ -5,7 +5,7 @@
 #include "commands/command_interface.h"
 #include "named_pipe_io.h"
 
-class Server : public INamedPipeCallback, public StreamComm::IReadCallback, public StreamComm::IWriteCallback {
+class Server : public INamedPipeCallback, public StreamComm::IStreamCallback {
   public:
     Server();
     virtual ~Server();

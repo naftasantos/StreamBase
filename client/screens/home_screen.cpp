@@ -18,6 +18,14 @@ HomeScreen::~HomeScreen() {
 
 }
 
+void HomeScreen::OnRead(bool success, StreamComm::Message message, void *data) {
+
+}
+
+void HomeScreen::OnWrite(bool success, StreamComm::Message message, void *data) {
+
+}
+
 Screen HomeScreen::Show() {
   Screen next_screen = kScreenNone;
   bool invalid = true;

@@ -25,8 +25,8 @@ class NamedPipeServer{
     bool Start(bool async);
     bool Write(StreamComm::Message &message);
     bool Read(StreamComm::Message* message);
-    bool WriteAsync(StreamComm::Message& message, StreamComm::IWriteCallback *callback, void *data);
-    bool ReadAsync(StreamComm::IReadCallback *callback, void *data);
+    bool WriteAsync(StreamComm::Message& message, StreamComm::IStreamCallback *callback, void *data);
+    bool ReadAsync(StreamComm::IStreamCallback *callback, void *data);
   private:
     // disabling copy constructor
     NamedPipeServer(const NamedPipeServer &other) {}

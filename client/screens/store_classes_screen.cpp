@@ -16,6 +16,14 @@ StoreClassesScreen::~StoreClassesScreen() {
 
 }
 
+void StoreClassesScreen::OnRead(bool success, StreamComm::Message message, void *data) {
+
+}
+
+void StoreClassesScreen::OnWrite(bool success, StreamComm::Message message, void *data) {
+  
+}
+
 Screen StoreClassesScreen::Show() {
   Screen next_screen = kScreenHome;
 

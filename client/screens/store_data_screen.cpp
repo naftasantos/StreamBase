@@ -4,10 +4,14 @@
 #include "comm.h"
 #include "windows_helper.h"
 
+#include "config.h"
+
 #include <iostream>
 #include <string>
 
-StoreDataScreen::StoreDataScreen() {
+StoreDataScreen::StoreDataScreen()
+  : next_screen(kScreenHome),
+    finished(false) {
 
 }
 
@@ -15,8 +19,53 @@ StoreDataScreen::~StoreDataScreen() {
 
 }
 
+void StoreDataScreen::OnRead(bool success, StreamComm::Message message, void *data) {
+  if (success) {
+    if (message.header.message_command == StreamComm::kCommandResponse) {
+      std::cout << "Response received. Verifying Status..." << std::endl;
+      StreamComm::ResponseCommand *response = nullptr;
+      response = (StreamComm::ResponseCommand*)message.data;
+      
+      if (response->status) {
+        std::cout << "Storage command completed successfully!" << std::endl;
+      } else {
+        std::cerr << "Storage command failed with response: " << response->message << std::endl;
+      }
+    } else {
+      std::cerr << "Invalid Response received: " << message.header.message_command << std::endl;
+    }
+  } else {
+    std::cerr << "Error reading data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+  }
+
+  this->finished = true;
+}
+
+void StoreDataScreen::OnWrite(bool success, StreamComm::Message message, void *data) {
+  if (success) {
+    HANDLE handle = ScreenData::GetHandle();
+    StreamComm::Message response_message;
+
+    if (Config::Async) {
+      if (!StreamComm::NamedPipeIO::ReadAsync(handle, this, nullptr)) {
+        std::cerr << "Unable to read data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+        this->finished = true;
+      }
+    } else {
+      if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
+        this->OnRead(true, response_message, nullptr);
+      } else {
+        std::cerr << "Unable to read data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+        this->finished = true;
+      }
+    }
+  } else {
+    std::cerr << "Error writing data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    this->finished = true;
+  }
+}
+
 Screen StoreDataScreen::Show() {
-  Screen next_screen = kScreenHome;
   std::string data_name;
   std::string data_value;
   bool ok = true;
@@ -51,6 +100,14 @@ Screen StoreDataScreen::Show() {
 
   this->Send(data_name, data_value);
 
+  if (Config::Async) {
+    do {
+      SleepEx(1000, TRUE);
+    } while(!this->finished);
+  }
+
+  std::cout << "Returning next screen: " << next_screen << std::endl;
+
   return next_screen;
 }
 
@@ -67,28 +124,18 @@ void StoreDataScreen::Send(std::string data_name, std::string data_value) {
   memset(message.data, 0, MAX_DATA_SIZE);
   memcpy(message.data, &store, sizeof(StreamComm::StoreDataCommand));
 
-  if (StreamComm::NamedPipeIO::Write(handle, message)) {
-    std::cout << "Message sent. Waiting for response." << std::endl;
-    StreamComm::Message response_message;
-
-    if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
-      if (response_message.header.message_command == StreamComm::kCommandResponse) {
-        std::cout << "Response received. Verifying Status..." << std::endl;
-        StreamComm::ResponseCommand *response = nullptr;
-        response = (StreamComm::ResponseCommand*)response_message.data;
-        
-        if (response->status) {
-          std::cout << "Storage command completed successfully!" << std::endl;
-        } else {
-          std::cout << "Storage command failed with response: " << response->message << std::endl;
-        }
-      } else {
-        std::cout << "Invalid Response received: " << response_message.header.message_command << std::endl;
-      }
-    } else {
-      std::cout << "Unable to read data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+  if (Config::Async) {
+    if (!StreamComm::NamedPipeIO::WriteAsync(handle, message, this, nullptr)) {
+      std::cerr << "Unable to send data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      this->finished = true;
     }
   } else {
-    std::cout << "Unable to send data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    if (StreamComm::NamedPipeIO::Write(handle, message)) {
+      std::cout << "Message sent. Waiting for response." << std::endl;
+      this->OnWrite(true, message, nullptr);
+    } else {
+      std::cout << "Unable to send data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      this->finished = true;
+    }
   }
 }
