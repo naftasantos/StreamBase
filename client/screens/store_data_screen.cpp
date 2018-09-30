@@ -44,20 +44,10 @@ void StoreDataScreen::OnRead(bool success, StreamComm::Message message, void *da
 void StoreDataScreen::OnWrite(bool success, StreamComm::Message message, void *data) {
   if (success) {
     HANDLE handle = ScreenData::GetHandle();
-    StreamComm::Message response_message;
 
-    if (Config::Async) {
-      if (!StreamComm::NamedPipeIO::ReadAsync(handle, this, nullptr)) {
-        std::cerr << "Unable to read data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-        this->finished = true;
-      }
-    } else {
-      if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
-        this->OnRead(true, response_message, nullptr);
-      } else {
-        std::cerr << "Unable to read data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-        this->finished = true;
-      }
+    if (!StreamComm::NamedPipeIO::Read(handle, this, nullptr)) {
+      std::cerr << "Unable to read data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      this->finished = true;
     }
   } else {
     std::cerr << "Error writing data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
@@ -124,18 +114,8 @@ void StoreDataScreen::Send(std::string data_name, std::string data_value) {
   memset(message.data, 0, MAX_DATA_SIZE);
   memcpy(message.data, &store, sizeof(StreamComm::StoreDataCommand));
 
-  if (Config::Async) {
-    if (!StreamComm::NamedPipeIO::WriteAsync(handle, message, this, nullptr)) {
-      std::cerr << "Unable to send data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-      this->finished = true;
-    }
-  } else {
-    if (StreamComm::NamedPipeIO::Write(handle, message)) {
-      std::cout << "Message sent. Waiting for response." << std::endl;
-      this->OnWrite(true, message, nullptr);
-    } else {
-      std::cout << "Unable to send data: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-      this->finished = true;
-    }
+  if (!StreamComm::NamedPipeIO::Write(handle, message, this, nullptr)) {
+    std::cerr << "Unable to send data async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    this->finished = true;
   }
 }

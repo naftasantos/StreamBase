@@ -20,15 +20,18 @@ typedef struct {
 
 class NamedPipeIO {
   public:
-    static bool Read(HANDLE handle, StreamComm::Message *message);
-    static bool Write(HANDLE handle, StreamComm::Message &message);
+    static bool Read(HANDLE handle, IStreamCallback *context, void *data);
+    static bool Write(HANDLE handle, StreamComm::Message& message, IStreamCallback *context, void *data);
 
-    static bool ReadAsync(HANDLE handle, IStreamCallback *context, void *data);
-    static bool WriteAsync(HANDLE handle, StreamComm::Message& message, IStreamCallback *context, void *data);
+    static void SetAsync(bool async);
   private:
     // This class should be static only
     NamedPipeIO() {}
     virtual ~NamedPipeIO() {}
     NamedPipeIO(const NamedPipeIO&) {}
+    static bool Async;
+
+    static bool ReadAsync(HANDLE handle, IStreamCallback *context, void *data);
+    static bool WriteAsync(HANDLE handle, StreamComm::Message& message, IStreamCallback *context, void *data);
 };
 };

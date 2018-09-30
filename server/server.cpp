@@ -7,7 +7,8 @@
 #include <iostream>
 
 Server::Server()
-  : status(true) {
+  : status(true),
+    named_pipe(Config::Async) {
 }
 
 Server::~Server() {
@@ -17,10 +18,10 @@ Server::~Server() {
 }
 
 void Server::Start() {
-  if (this->named_pipe.Start(Config::Async)) {
-    this->OnConnected();
-  } else {
-    this->status = false;
+  this->status = this->named_pipe.Start();
+
+  if (this->status) {
+    OnConnected();
   }
 }
 
@@ -48,38 +49,16 @@ void Server::OnMessage(StreamComm::Message &message) {
   std::cout << "Sending response with status '" << (response.status ? "true" : "false") <<
                 "' and message '" << response.message << "'" << std::endl;
 
-  if (Config::Async) {
-    if (!this->named_pipe.WriteAsync(message, this, nullptr)) {
-      this->status = false;
-      std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-    }
-  } else {
-    if (this->named_pipe.Write(message)) {
-      std::cout << "Response sent" << std::endl;
-      ReadNextMessage();
-    } else {
-      this->status = false;
-      std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-    }
+  if (!this->named_pipe.Write(message, this, nullptr)) {
+    this->status = false;
+    std::cout << "Unable to send response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
   }
 }
 
 void Server::ReadNextMessage() {
-  if (Config::Async) {
-    std::cout << "Reading Async" << std::endl;
-    if (!this->named_pipe.ReadAsync(this, nullptr)) {
-      this->status = false;
-      std::cerr << "Error Reading message Async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-    }
-  } else {
-    std::cout << "Reading normal" << std::endl;
-    StreamComm::Message message;
-    if(this->named_pipe.Read(&message)) {
-      OnMessage(message);
-    } else {
-      this->status = false;
-      std::cerr << "Error Reading message: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-    }
+  if (!this->named_pipe.Read(this, nullptr)) {
+    this->status = false;
+    std::cerr << "Error Reading message Async: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
   }
 }
 
@@ -91,19 +70,9 @@ void Server::OnConnected() {
   message.header.data_size = 0;
   memset(message.data, 0, MAX_DATA_SIZE);
 
-  if (Config::Async) {
-    if (!this->named_pipe.WriteAsync(message, this, nullptr)) {
-      std::cerr << "Error sending greeting: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-      this->status = false;
-    }
-  } else {
-    if (this->named_pipe.Write(message)) {
-      std::cout << "Message sent successfully" << std::endl;
-      ReadNextMessage();
-    } else {
-      std::cerr << "Error sending greeting: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-      this->status = false;
-    }
+  if (!this->named_pipe.Write(message, this, nullptr)) {
+    std::cerr << "Error sending greeting: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    this->status = false;
   }
 }
 

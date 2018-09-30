@@ -3,6 +3,12 @@
 
 #include <iostream>
 
+bool StreamComm::NamedPipeIO::Async = false;
+
+void StreamComm::NamedPipeIO::SetAsync(bool async) {
+  Async = async;
+}
+
 static void FreeCallbackData(StreamComm::CallbackData* callback) {
   if (callback != nullptr) {
     if (callback->data != nullptr) {
@@ -103,19 +109,28 @@ bool StreamComm::NamedPipeIO::ReadAsync(HANDLE handle, StreamComm::IStreamCallba
   return status;
 }
 
-bool StreamComm::NamedPipeIO::Read(HANDLE handle, StreamComm::Message *message) {
+bool StreamComm::NamedPipeIO::Read(HANDLE handle,
+                                   StreamComm::IStreamCallback *callback,
+                                   void *data) {
   bool status = true;
 
-  if (handle == INVALID_HANDLE_VALUE || message == NULL) {
+  if (handle == INVALID_HANDLE_VALUE) {
     status = false;
     SetLastError(ERROR_INVALID_PARAMETER);
   } else {
-    status = ReadFile(handle,
-                      message,
-                      sizeof(StreamComm::Message),
-                      NULL,
-                      NULL);
+    if (Async) {
+      ReadAsync(handle, callback, data);
+    } else {
+      StreamComm::Message message;
+      memset(&message, 0, sizeof(StreamComm::Message));
 
+      status = ReadFile(handle,
+                        &message,
+                        sizeof(StreamComm::Message),
+                        NULL,
+                        NULL);
+      callback->OnRead(status, message, data);
+    }
   }
 
   return status;
@@ -164,19 +179,26 @@ bool StreamComm::NamedPipeIO::WriteAsync(HANDLE handle,
   return status;
 }
 
-bool StreamComm::NamedPipeIO::Write(HANDLE handle, StreamComm::Message &message) {
+bool StreamComm::NamedPipeIO::Write(HANDLE handle,
+                                    StreamComm::Message &message,
+                                    StreamComm::IStreamCallback *callback,
+                                    void *data) {
   bool status = true;
 
   if (handle == INVALID_HANDLE_VALUE) {
     status = false;
     SetLastError(ERROR_INVALID_PARAMETER);
   } else {
-    status = WriteFile(handle,
-                       &message,
-                       sizeof(StreamComm::Message),
-                       NULL,
-                       NULL);
-
+    if (Async) {
+      status = WriteAsync(handle, message, callback, data);
+    } else {
+      status = WriteFile(handle,
+                        &message,
+                        sizeof(StreamComm::Message),
+                        NULL,
+                        NULL);
+      callback->OnWrite(status, message, data);
+    }
   }
 
   return status;

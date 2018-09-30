@@ -6,7 +6,9 @@
 
 #define BUFFER_SIZE 1024 * 16
 
-NamedPipeServer::NamedPipeServer() {
+NamedPipeServer::NamedPipeServer(bool async) {
+  StreamComm::NamedPipeIO::SetAsync(async);
+  this->async = async;
   this->_handle = NULL;
   memset(&(this->overlap), 0, sizeof(OVERLAPPED));
 
@@ -33,12 +35,12 @@ void NamedPipeServer::CloseNamedPipe() {
   }
 }
 
-bool NamedPipeServer::Start(bool async) {
+bool NamedPipeServer::Start() {
   bool ok = false;
   DWORD options = PIPE_ACCESS_DUPLEX;
   DWORD pipe_mode = PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT;
 
-  if (async) {
+  if (this->async) {
     std::cout << "Async mode. Setting overlapped to the options" << std::endl;
     options |= FILE_FLAG_OVERLAPPED;
   }
@@ -108,18 +110,10 @@ bool NamedPipeServer::Start(bool async) {
   return ok;
 }
 
-bool NamedPipeServer::Write(StreamComm::Message &message) {
-  return StreamComm::NamedPipeIO::Write(this->_handle, message);
+bool NamedPipeServer::Write(StreamComm::Message& message, StreamComm::IStreamCallback *callback, void *data) {
+  return StreamComm::NamedPipeIO::Write(this->_handle, message, callback, data);
 }
 
-bool NamedPipeServer::Read(StreamComm::Message *message) {
-  return StreamComm::NamedPipeIO::Read(this->_handle, message);
-}
-
-bool NamedPipeServer::WriteAsync(StreamComm::Message& message, StreamComm::IStreamCallback *callback, void *data) {
-  return StreamComm::NamedPipeIO::WriteAsync(this->_handle, message, callback, data);
-}
-
-bool NamedPipeServer::ReadAsync(StreamComm::IStreamCallback *callback, void *data) {
-  return StreamComm::NamedPipeIO::ReadAsync(this->_handle, callback, data);
+bool NamedPipeServer::Read(StreamComm::IStreamCallback *callback, void *data) {
+  return StreamComm::NamedPipeIO::Read(this->_handle, callback, data);
 }

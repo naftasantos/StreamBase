@@ -45,7 +45,6 @@ void ConnectScreen::ReceivedMessage(StreamComm::Message& message) {
 
 Screen ConnectScreen::Show() {
   HANDLE handle;
-  StreamComm::Message message;
   DWORD mode = PIPE_READMODE_MESSAGE;
   DWORD file_flags = 0;
 
@@ -53,6 +52,8 @@ Screen ConnectScreen::Show() {
     std::cout << "Async mode" << std::endl;
     file_flags |= FILE_FLAG_OVERLAPPED;
   }
+
+  StreamComm::NamedPipeIO::SetAsync(Config::Async);
 
   std::cout << "Connecting to Pipe" << std::endl;
   handle = CreateFile(TEXT(PIPE_NAME),
@@ -70,19 +71,9 @@ Screen ConnectScreen::Show() {
     ScreenData::SetHandle(handle);
 
     if (SetNamedPipeHandleState(handle, &mode, NULL, NULL)) {
-      if (Config::Async) {
-        std::cout << "Reading async!" << std::endl;
-        if (!StreamComm::NamedPipeIO::ReadAsync(handle, this, nullptr)) {
-          std::cerr << "Error reading from pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-          this->finished = false;
-        }
-      } else {
-        if (StreamComm::NamedPipeIO::Read(handle, &message)) {
-          ReceivedMessage(message);
-        } else {
-          std::cerr << "Error reading from pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-          this->finished = true;
-        }
+      if (!StreamComm::NamedPipeIO::Read(handle, this, nullptr)) {
+        std::cerr << "Error reading from pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+        this->finished = false;
       }
     } else {
       std::cerr << "Error setting named pipe mode: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;

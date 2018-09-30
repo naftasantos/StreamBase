@@ -16,4 +16,6 @@ class ReadStoredDataScreen : public IScreen {
     ReadStoredDataScreen(const ReadStoredDataScreen&) {}
 
     void Send(std::string data_name);
+    bool finished;
+    Screen next_screen;
 };

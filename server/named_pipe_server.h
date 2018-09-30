@@ -9,24 +9,14 @@
 #include "comm.h"
 #include "named_pipe_io.h"
 
-class INamedPipeCallback {
-  public:
-    virtual ~INamedPipeCallback() {};
-};
-
-typedef std::function<void(StreamComm::Message&, INamedPipeCallback*)> MessageCallback;
-typedef std::function<void(INamedPipeCallback*)> ConnectedCallback;
-
 class NamedPipeServer{
   public:
-    NamedPipeServer();
+    NamedPipeServer(bool async);
     virtual ~NamedPipeServer();
 
-    bool Start(bool async);
-    bool Write(StreamComm::Message &message);
-    bool Read(StreamComm::Message* message);
-    bool WriteAsync(StreamComm::Message& message, StreamComm::IStreamCallback *callback, void *data);
-    bool ReadAsync(StreamComm::IStreamCallback *callback, void *data);
+    bool Start();
+    bool Write(StreamComm::Message& message, StreamComm::IStreamCallback *callback, void *data);
+    bool Read(StreamComm::IStreamCallback *callback, void *data);
   private:
     // disabling copy constructor
     NamedPipeServer(const NamedPipeServer &other) {}
@@ -34,4 +24,5 @@ class NamedPipeServer{
 
     OVERLAPPED overlap;
     HANDLE _handle;
+    bool async;
 };

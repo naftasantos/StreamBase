@@ -2,13 +2,16 @@
 #include "screen_data.h"
 #include "named_pipe_io.h"
 #include "windows_helper.h"
+#include "config.h"
 
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
 
-StoreClassesScreen::StoreClassesScreen() {
+StoreClassesScreen::StoreClassesScreen()
+  : finished(false),
+    next_screen(kScreenHome) {
 
 }
 
@@ -17,47 +20,113 @@ StoreClassesScreen::~StoreClassesScreen() {
 }
 
 void StoreClassesScreen::OnRead(bool success, StreamComm::Message message, void *data) {
+  if (success) {
+    if (message.header.message_command == StreamComm::kCommandResponse) {
+      StreamComm::ResponseCommand response = { 0 };
+      memcpy(&response, message.data, sizeof(StreamComm::ResponseCommand));
 
+      if (response.status) {
+        switch(this->state) {
+          case kStateListClass:
+            ListClassesFinished(response);
+          break;
+          case kStateStoreClass:
+            StoreClassFinished(response);
+          break;
+          case kStateListParams:
+            ListParamsFinished(response);
+          break;
+          case kStateCallMethod:
+            CallMethodFinished(response);
+          break;
+        }
+      } else {
+        std::cerr << "Command failed with message: " << response.message << std::endl;
+        this->finished = true;
+      }
+    } else {
+      std::cerr << "Invalid response received: " << message.header.message_command << std::endl;
+      this->finished = true;
+    }
+  } else {
+    std::cerr << "Error Reading data" << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    this->finished = true;
+  }
 }
 
 void StoreClassesScreen::OnWrite(bool success, StreamComm::Message message, void *data) {
-  
+  if (success) {
+    if (!StreamComm::NamedPipeIO::Read(ScreenData::GetHandle(), this, nullptr)) {
+      std::cerr << "Unable to read response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      this->finished = true;
+    }
+  } else {
+    std::cerr << "Error Writing data" << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    this->finished = true;
+  }
+}
+
+void StoreClassesScreen::ListParamsFinished(StreamComm::ResponseCommand response) {
+  std::istringstream params_stream(response.message);
+  std::stringstream param_values;
+  std::string param_name;
+
+  while(std::getline(params_stream, param_name, ';')) {
+    std::string param_value;
+    std::cout << "Type in the value for the param: " << param_name << std::endl;
+    std::cin >> param_value;
+    param_values << param_value << ";";
+  }
+
+  std::cout << "Executing " << this->chosen_method << std::endl;
+
+  if (!ExecuteMethod(this->chosen_method, param_values.str(), response)) {
+    std::cerr << "Unable to execute method" << std::endl;
+    this->finished = true;
+  }
+}
+
+void StoreClassesScreen::CallMethodFinished(StreamComm::ResponseCommand response) {
+  std::cout << "Call Method executed with message: " << response.message << std::endl;
+  this->finished = true;
+}
+
+void StoreClassesScreen::StoreClassFinished(StreamComm::ResponseCommand response) {
+  std::cout << "Class stored!" << std::endl;
+  if (!CallMethod(this->chosen_class, response)) {
+    std::cerr << "Unable to call method" << std::endl;
+    this->finished = true;
+  }
+}
+
+void StoreClassesScreen::ListClassesFinished(StreamComm::ResponseCommand response) {
+  this->chosen_class = ChooseClass(std::string(response.message));
+  std::cout << "You chose " << this->chosen_class << std::endl;
+
+  this->state = kStateStoreClass;
+  if (!StoreClass(this->chosen_class, response)) {
+    std::cerr << "Unable to store class" << std::endl;
+    this->finished = true;
+  }
 }
 
 Screen StoreClassesScreen::Show() {
-  Screen next_screen = kScreenHome;
-
   std::cout << "Listing classes" << std::endl;
-  StreamComm::ResponseCommand response;
-
-  if (ListClasses(response)) {
-    if (response.status) {
-      std::string chosen_class = ChooseClass(std::string(response.message));
-      std::cout << "You chose " << chosen_class << std::endl;
-      if (StoreClass(chosen_class, response)) {
-        if (response.status) {
-          std::cout << "Class stored!" << std::endl;
-          if (CallMethod(chosen_class, response)) {
-            std::cout << "Command executed successfully" << std::endl;
-          }
-        } else {
-          std::cerr << "Command to register class failed with message: " << response.message << std::endl;
-        }
-      } else {
-        std::cerr << "Unable to store class" << std::endl;
-      }
-    } else {
-      std::cerr << "Command failed with message: " << response.message << std::endl;
-    }
-  } else {
+  if (!ListClasses()) {
     std::cerr << "Unable to list classes" << std::endl;
+  }
+
+  if (Config::Async) {
+    do {
+      SleepEx(1000, TRUE);
+    } while(!this->finished);
   }
 
   return next_screen;
 }
 
-bool StoreClassesScreen::ListClasses(StreamComm::ResponseCommand& response) {
-  bool ok = false;
+bool StoreClassesScreen::ListClasses() {
+  bool ok = true;
 
   HANDLE handle = ScreenData::GetHandle();
   StreamComm::Message message;
@@ -65,21 +134,12 @@ bool StoreClassesScreen::ListClasses(StreamComm::ResponseCommand& response) {
   message.header.data_size = 0;
   memset(message.data, 0, MAX_DATA_SIZE);
 
-  if (StreamComm::NamedPipeIO::Write(handle, message)) {
-    StreamComm::Message response_message;
+  this->state = kStateListClass;
 
-    if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
-      if (response_message.header.message_command == StreamComm::kCommandResponse) {
-        memcpy(&response, response_message.data, sizeof(StreamComm::ResponseCommand));
-        ok = true;
-      } else {
-        std::cerr << "Invalid response received: " << response_message.header.message_command << std::endl;
-      }
-    } else {
-      std::cerr << "Unable to read response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-    }
-  } else {
+  if (!StreamComm::NamedPipeIO::Write(handle, message, this, nullptr)) {
     std::cerr << "Error writing message: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+    this->finished = true;
+    ok = false;
   }
 
   return ok;
@@ -118,7 +178,7 @@ std::string StoreClassesScreen::ChooseClass(std::string classes) {
 }
 
 bool StoreClassesScreen::StoreClass(std::string class_name, StreamComm::ResponseCommand& response) {
-  bool ok = false;
+  bool ok = true;
 
   HANDLE handle = ScreenData::GetHandle();
   StreamComm::Message message;
@@ -134,21 +194,10 @@ bool StoreClassesScreen::StoreClass(std::string class_name, StreamComm::Response
     memcpy(command.class_name, class_name.c_str(), class_name.length() * sizeof(char));
     memcpy(message.data, &command, sizeof(StreamComm::StoreClassCommand));
 
-    if (StreamComm::NamedPipeIO::Write(handle, message)) {
-      StreamComm::Message response_message;
-
-      if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
-        if (response_message.header.message_command == StreamComm::kCommandResponse) {
-          memcpy(&response, response_message.data, sizeof(StreamComm::ResponseCommand));
-          ok = true;
-        } else {
-          std::cerr << "Invalid response received: " << response_message.header.message_command << std::endl;
-        }
-      } else {
-        std::cerr << "Unable to read response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-      }
-    } else {
+    if (!StreamComm::NamedPipeIO::Write(handle, message, this, nullptr)) {
       std::cerr << "Error writing message: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      this->finished = true;
+      ok = false;
     }
   }
 
@@ -156,7 +205,7 @@ bool StoreClassesScreen::StoreClass(std::string class_name, StreamComm::Response
 }
 
 bool StoreClassesScreen::CallMethod(std::string class_name, StreamComm::ResponseCommand& response) {
-  bool ok = false;
+  bool ok = true;
 
   std::istringstream methods(response.message);
   std::vector<std::string> method_names;
@@ -174,7 +223,6 @@ bool StoreClassesScreen::CallMethod(std::string class_name, StreamComm::Response
   } else {
     bool valid = false;
     int choice;
-    std::string chosen_method;
 
     do {
       std::cin >> choice;
@@ -185,37 +233,13 @@ bool StoreClassesScreen::CallMethod(std::string class_name, StreamComm::Response
         std::cerr << "Invalid choice" << std::endl;
       }
     } while(!valid);
+    std::cout << "Getting chosen method: " << std::endl;
+    this->chosen_method = method_names.at(choice);
+    std::cout << "Method chosen: " << this->chosen_method << std::endl;
 
-    chosen_method = method_names.at(choice);
-    std::cout << "Method chosen: " << chosen_method << std::endl;
-
-    if (ListParams(class_name, chosen_method, response)) {
-      if (response.status) {
-        std::istringstream params_stream(response.message);
-        std::stringstream param_values;
-        std::string param_name;
-
-        while(std::getline(params_stream, param_name, ';')) {
-          std::string param_value;
-          std::cout << "Type in the value for the param: " << param_name << std::endl;
-          std::cin >> param_value;
-          param_values << param_value << ";";
-        }
-
-        std::cout << "Executing " << chosen_method << std::endl;
-        if (ExecuteMethod(chosen_method, param_values.str(), response)) {
-          if (response.status) {
-            std::cout << "Method executed with the result: " << response.message << std::endl;
-            ok = true;
-          } else {
-            std::cerr << "Execute Method failed with message: " << response.message << std::endl;
-          }
-        } else {
-          std::cerr << "Unable to execute method" << std::endl;
-        }
-      } else {
-        std::cerr << "Params listing failed with message: " << response.message << std::endl;
-      }
+    if (!ListParams(class_name, chosen_method, response)) {
+      std::cerr << "Params listing failed with message: " << response.message << std::endl;
+      ok = false;
     }
   }
 
@@ -225,7 +249,7 @@ bool StoreClassesScreen::CallMethod(std::string class_name, StreamComm::Response
 bool StoreClassesScreen::ListParams(std::string class_name,
                                     std::string method_name,
                                     StreamComm::ResponseCommand& response) {
-  bool ok = false;
+  bool ok = true;
 
   HANDLE handle = ScreenData::GetHandle();
   StreamComm::Message message;
@@ -245,21 +269,11 @@ bool StoreClassesScreen::ListParams(std::string class_name,
 
     std::cout << "Class name: " << command.class_name << std::endl;
 
-    if (StreamComm::NamedPipeIO::Write(handle, message)) {
-      StreamComm::Message response_message;
-
-      if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
-        if (response_message.header.message_command == StreamComm::kCommandResponse) {
-          memcpy(&response, response_message.data, sizeof(StreamComm::ResponseCommand));
-          ok = true;
-        } else {
-          std::cerr << "Invalid response received: " << response_message.header.message_command << std::endl;
-        }
-      } else {
-        std::cerr << "Unable to read response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-      }
-    } else {
+    this->state = kStateListParams;
+    if (!StreamComm::NamedPipeIO::Write(handle, message, this, nullptr)) {
       std::cerr << "Error writing message: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      ok = false;
+      this->finished = false;
     }
   }
 
@@ -269,7 +283,7 @@ bool StoreClassesScreen::ListParams(std::string class_name,
 bool StoreClassesScreen::ExecuteMethod(std::string method_name,
                                        std::string params,
                                        StreamComm::ResponseCommand& response) {
-  bool ok = false;
+  bool ok = true;
 
   HANDLE handle = ScreenData::GetHandle();
   StreamComm::Message message;
@@ -287,21 +301,11 @@ bool StoreClassesScreen::ExecuteMethod(std::string method_name,
     memcpy(command.params, params.c_str(), params.length() * sizeof(char));
     memcpy(message.data, &command, sizeof(StreamComm::ExecuteMethodCommand));
 
-    if (StreamComm::NamedPipeIO::Write(handle, message)) {
-      StreamComm::Message response_message;
-
-      if (StreamComm::NamedPipeIO::Read(handle, &response_message)) {
-        if (response_message.header.message_command == StreamComm::kCommandResponse) {
-          memcpy(&response, response_message.data, sizeof(StreamComm::ResponseCommand));
-          ok = true;
-        } else {
-          std::cerr << "Invalid response received: " << response_message.header.message_command << std::endl;
-        }
-      } else {
-        std::cerr << "Unable to read response: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
-      }
-    } else {
+    this->state = kStateCallMethod;
+    if (!StreamComm::NamedPipeIO::Write(handle, message, this, nullptr)) {
       std::cerr << "Error writing message: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      this->finished = true;
+      ok = false;
     }
   }
 

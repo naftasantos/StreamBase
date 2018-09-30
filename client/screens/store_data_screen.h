@@ -8,7 +8,7 @@
 class StoreDataScreen : public IScreen {
   public:
     StoreDataScreen();
-    ~StoreDataScreen();
+    virtual ~StoreDataScreen();
     virtual Screen Show();
 
     virtual void OnRead(bool success, StreamComm::Message message, void *data);
