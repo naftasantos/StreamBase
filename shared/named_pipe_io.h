@@ -12,11 +12,13 @@ class IStreamCallback {
 class IReadCallback : public IStreamCallback {
   public:
     virtual void OnRead(bool success, StreamComm::Message message, void *data) = 0;
+    virtual ~IReadCallback() {}
 };
 
 class IWriteCallback : public IStreamCallback {
   public:
     virtual void OnWrite(bool success, StreamComm::Message message, void *data) = 0;
+    virtual ~IWriteCallback() {}
 };
 
 typedef struct {

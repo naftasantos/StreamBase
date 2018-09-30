@@ -21,6 +21,7 @@ static void FreeCallbackData(StreamComm::CallbackData* callback) {
 
 static VOID WINAPI ReadCallback(DWORD error, DWORD bytes_written, LPOVERLAPPED overlap) {
   bool status = error == ERROR_SUCCESS;
+  SetLastError(error);
   StreamComm::CallbackData *callback_data = nullptr;
 
   std::cout << "ReadCallback" << std::endl;
@@ -42,6 +43,7 @@ static VOID WINAPI ReadCallback(DWORD error, DWORD bytes_written, LPOVERLAPPED o
 
 static VOID WINAPI WriteCallback(DWORD error, DWORD bytes_written, LPOVERLAPPED overlap) {
   bool status = error == ERROR_SUCCESS;
+  SetLastError(error);
   StreamComm::CallbackData *callback_data = nullptr;
 
   std::cout << "WriteCallback" << std::endl;
