@@ -20,6 +20,9 @@ Two console applications using C++: 1. client 2. server; with the following feat
 * Since there is no requirement for multiple simultaneous connections, I decided to have single connection implemented to speed up the development
 
 ## How to use
+> Note:
+> The binaries are located under the `dist` directory. These binaries were compiled using MSVC2017 compilers, runtimes for this environment must be installed prior to running them. Only Windows API and C++ standard libraries were used.
+
 Call `server.exe` and then `client.exe`. Once the client is shut down the server will as well.
 
 The client will show a menu where you can select options from which you will interact with the server through the clients interface.
