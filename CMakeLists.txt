@@ -4,7 +4,6 @@ project(StreamBase VERSION 0.1.0)
 
 set(SERVER_SOURCE server/main.cpp
                   server/server.cpp
-                  server/config.cpp
                   server/named_pipe_server.cpp
                   server/commands/command_factory.cpp
                   server/commands/store_command.cpp
@@ -20,7 +19,6 @@ set(SERVER_SOURCE server/main.cpp
                   server/custom_classes/custom_class_runner.cpp)
 
 set(SERVER_INCLUDE server/server.h
-                   server/config.h
                    server/named_pipe_server.h
                    server/commands/command_factory.h
                    server/commands/command_interface.h
@@ -56,8 +54,11 @@ set(CLIENT_INCLUDE client/screens/screen_factory.h
                    client/screens/connect_screen.h)
 
 set(SHARED_SOURCE shared/windows_helper.cpp
+                  shared/config.cpp
                   shared/named_pipe_io.cpp)
+
 set(SHARED_INCLUDE shared/windows_helper.h
+                   shared/config.h
                    shared/named_pipe_io.h
                    shared/comm.h)
 

@@ -18,6 +18,7 @@ Screen ConnectScreen::Show() {
   Screen next_screen = kScreenNone;
   HANDLE handle;
   StreamComm::Message message;
+  DWORD mode = PIPE_READMODE_MESSAGE;
 
   std::cout << "Connecting to Pipe" << std::endl;
   handle = CreateFile(TEXT(PIPE_NAME),
@@ -34,18 +35,22 @@ Screen ConnectScreen::Show() {
     std::cout << "Connected!" << std::endl;
     ScreenData::SetHandle(handle);
 
-    if (StreamComm::NamedPipeIO::Read(handle, &message)) {
-      switch(message.header.message_command) {
-        case StreamComm::kCommandGreeting:
-          std::cout << "Greeting command received" << std::endl;
-          next_screen = kScreenHome;
-          break;
-        default:
-          std::cerr << "Invalid command received" << std::endl;
-          break;
+    if (SetNamedPipeHandleState(handle, &mode, NULL, NULL)) {
+      if (StreamComm::NamedPipeIO::Read(handle, &message)) {
+        switch(message.header.message_command) {
+          case StreamComm::kCommandGreeting:
+            std::cout << "Greeting command received" << std::endl;
+            next_screen = kScreenHome;
+            break;
+          default:
+            std::cerr << "Invalid command received" << std::endl;
+            break;
+        }
+      } else {
+        std::cerr << "Error reading from pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
       }
     } else {
-      std::cerr << "Error reading from pipe: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
+      std::cerr << "Error setting named pipe mode: " << Helper::WindowsHelper::GetLastErrorMessage() << std::endl;
     }
   }
 

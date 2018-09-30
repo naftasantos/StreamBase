@@ -4,8 +4,11 @@
 #include "screens/screen_interface.h"
 #include "screens/screen_factory.h"
 
+#include "config.h"
+
 int main(int argc, char** argv) {
   Screen current_screen = kScreenConnect;
+  Config::ReadConfig(argc, argv);
 
   do {
     IScreen* screen = ScreenFactory::CreateScreen(current_screen);
