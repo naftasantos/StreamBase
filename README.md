@@ -4,7 +4,7 @@ This project is intended to develop a client/server architecture with the follow
 Two console applications using C++: 1. client 2. server; with the following features:
 
 * [x] The client should be able to connect to the server through a NamedPipe
-* [ ] The client should be able to make both sync and async calls to the server
+* [x] The client should be able to make both sync and async calls to the server
 * [x] The client should be able to send trivial data (strings, numbers) to the server
 * [x] The client should be able to create objects on the server (based on req-7 below), retrieve them, their attributes and call methods on them
 * [x] The server should be able to receive both sync/async connection requests from clients
